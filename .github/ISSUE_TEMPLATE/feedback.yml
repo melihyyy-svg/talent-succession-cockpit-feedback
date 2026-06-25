@@ -1,0 +1,48 @@
+name: Cockpit Geri Bildirim
+description: Talent & Succession Cockpit public demosu için geri bildirim
+title: "[Geri Bildirim] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Pilot öncesi görüşlerin için teşekkürler. Lütfen aşağıdaki soruları kısaca yanıtla.
+  - type: textarea
+    id: amac
+    attributes:
+      label: 1) İlk bakışta cockpit'in amacı anlaşılır mı?
+      placeholder: Örn. Evet/Hayır + kısa açıklama
+    validations:
+      required: true
+  - type: textarea
+    id: faydali
+    attributes:
+      label: 2) En faydalı bulduğun ekran veya bilgi nedir?
+    validations:
+      required: false
+  - type: textarea
+    id: karisik
+    attributes:
+      label: 3) Kafa karıştırıcı veya gereksiz bulduğun alan var mı?
+    validations:
+      required: false
+  - type: textarea
+    id: oneri
+    attributes:
+      label: 4) Pilot öncesi tek öncelikli önerin nedir?
+    validations:
+      required: false
+  - type: dropdown
+    id: ekran
+    attributes:
+      label: İlgili ekran (opsiyonel)
+      options:
+        - Genel
+        - Yönetici Karar Özeti
+        - Pozisyon & Yedek Detayı
+        - Talent Pool & 9-Box Explorer
+        - Aday Keşfi
+        - Aksiyon Takip
+        - Veri Kalitesi
+    validations:
+      required: false

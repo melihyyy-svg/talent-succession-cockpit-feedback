@@ -1,0 +1,33 @@
+# --- Sırlar / kimlik (ASLA commit edilmez) ---
+.env
+.env.*
+*.pem
+*.key
+*.token
+*_token*
+*secret*
+credentials*
+.netrc
+
+# --- Kaynak Excel dosyaları (repoya konmaz; veri data/*.json olarak taşınır) ---
+*.xlsx
+*.xlsm
+*.xls
+
+# --- Python / üretici geçici çıktıları ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+_inspect.txt
+
+# --- IDE / editör ---
+.vscode/
+.idea/
+*.swp
+*~
+
+# --- OS geçici ---
+.DS_Store
+Thumbs.db
+desktop.ini
