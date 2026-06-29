@@ -81,6 +81,64 @@ function hasBackup(row){
   return normalizeValue(row[C.COVERAGE]) === C.COVERAGE_PRESENT;
 }
 
+/* === Ready-now taksonomisi (READY_NOW_VALIDATION.md) ===
+   Normalize edilmiş TAM eşleşme + açık allowlist. Substring/fuzzy/casefold YOK. */
+const READY_NOW_TIPI = ["YETENEK HAZIR", "DOĞAL + HAZIR"];   // config: değiştirmek = bu liste
+// Bilinen (sınıflandırılmış) tüm Yedek_Tipi değerleri; bunun DIŞINDAki değer = eşlenmemiş.
+const KNOWN_YEDEK_TIPI = [
+  "YETENEK HAZIR", "DOĞAL + HAZIR", "DOĞAL + HAZ.NIYOR", "YETENEK HAZ.NIYOR",
+  "ALT KADEME (Assess. eksik)", "DOĞAL (Assess. eksik)", "DOĞAL (Perf. eksik)",
+  "ALT KADEME (Perf. eksik)", "DOĞAL (SAĞLAM PERF.)", "DOĞAL (ÇEKİRDEK)",
+  "DOĞAL (ORTALAMA)", "DOĞAL (GİZLİ POT.)", "DOĞAL (DÜŞÜK)", "DOĞAL (TUTARSIZ)",
+  "ALT KADEME (GİZLİ POT.)", "ALT KADEME (ORTALAMA)",
+];
+/* Yedek_Tipi normalizasyonu: NFC + boşluk sadeleştirme + strip. casefold/lower YOK. */
+function normTipi(v){
+  if(v === null || v === undefined) return "";
+  return String(v).normalize("NFC").replace(/\s+/g, " ").trim();
+}
+const _READY_SET = new Set(READY_NOW_TIPI.map(normTipi));
+const _KNOWN_SET = new Set(KNOWN_YEDEK_TIPI.map(normTipi));
+function isReadyTipi(v){ return _READY_SET.has(normTipi(v)); }
+/* Bir yedek KAYDININ Yedek_Tipi'si HAZIR mı? (nesne -> tipi alanı) */
+function isReadyBackup(b){ return isReadyTipi(b["Yedek_Tipi"]); }
+
+/* Bir pozisyonun (İsim ilişkisiyle bağlı) en az bir HAZIR yedeği var mı? */
+function positionHasReady(row){ return lookupBackups(row["İsim"]).some(isReadyBackup); }
+
+/* Pozisyon bazlı Ready-now göstergeleri. */
+function readyNowStats(){
+  const P = DATA.positions;
+  const readyRecords = DATA.backups.filter(isReadyBackup).length;   // KAYIT bazlı (59)
+  let coverage = 0, gap = 0, acilYuksek = 0;                       // POZİSYON bazlı
+  P.forEach(p => {
+    const has = positionHasReady(p);
+    if(has) coverage++;
+    if(C.HIGH_RISK.includes(String(p[C.URGENCY]).trim())){
+      acilYuksek++;
+      if(!has) gap++;
+    }
+  });
+  return {readyRecords, coverage, total: P.length, gap, acilYuksek,
+          coverageRatio: P.length ? coverage/P.length : 0};
+}
+
+/* ACİL+YÜKSEK olup hazır halefi OLMAYAN pozisyonlar (kritik açık listesi). */
+function positionsReadyGap(){
+  return DATA.positions.filter(p =>
+    C.HIGH_RISK.includes(String(p[C.URGENCY]).trim()) && !positionHasReady(p));
+}
+
+/* Eşlenmemiş (bilinen taksonomide olmayan) Yedek_Tipi değerleri -> {değer: adet}. */
+function unmappedYedekTipi(){
+  const seen = {};
+  DATA.backups.forEach(b => {
+    const t = normTipi(b["Yedek_Tipi"]);
+    if(t && !_KNOWN_SET.has(t)) seen[t] = (seen[t] || 0) + 1;
+  });
+  return seen;
+}
+
 function calculateSummary(rows){
   const total = rows.length;
   const counts = {};
@@ -314,12 +372,18 @@ function getMultiselect(id){
 /* === Üç kademeli bağlı seçim: Firma -> Ünvan -> Mevcut Pozisyon Sahibi ===
    mount: container; rows: pozisyon kayıtları; prefix: benzersiz id öneki;
    onPick(row|null) seçim değiştikçe çağrılır. */
-function renderCascade(mount, rows, prefix, onPick){
+function renderCascade(mount, rows, prefix, onPick, initialIndex){
   const companies = [...new Set(rows.filter(r=>!isBlank(r["Firma"]))
     .map(r=>String(r["Firma"]).trim()))].sort((a,b)=>a.localeCompare(b,"tr"));
   if(!companies.length){ mount.innerHTML = emptyState("Gösterilecek firma yok."); onPick(null); return; }
 
-  const state = {firma: companies[0], unvan: null, personIdx: null};
+  let state = {firma: companies[0], unvan: null, personIdx: null};
+  // Deep-link: belirli bir pozisyonla önyükle (KPI drill-down "Detayda aç").
+  if(initialIndex != null && rows[initialIndex]){
+    const r0 = rows[initialIndex];
+    state = {firma: String(r0["Firma"]).trim(),
+             unvan: String(r0["Pozisyon"]).trim(), personIdx: initialIndex};
+  }
 
   function titlesFor(firma){
     return [...new Set(rows.filter(r=>String(r["Firma"]).trim()===firma && !isBlank(r["Pozisyon"]))

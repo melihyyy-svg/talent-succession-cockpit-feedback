@@ -53,6 +53,12 @@ function activate(id){
   if(history.replaceState) history.replaceState(null,"","#"+tab.id);
 }
 
+/* KPI drill-down → belirli pozisyonu Pozisyon & Yedek Detayı'nda aç. */
+function openInDetail(positionIndex){
+  window.__pendingDetail = positionIndex;
+  activate("detail");
+}
+
 function renderFeedback(){
   const questions = [
     "İlk bakışta cockpit'in amacı anlaşılır mı?",

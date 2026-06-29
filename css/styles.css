@@ -124,7 +124,10 @@ select[multiple]{min-height:104px;}
 @media(max-width:760px){.cascade{grid-template-columns:1fr;}}
 
 /* --- 9-Box matris --- */
+#talent_matrix{overflow-x:auto;}
 .ninebox{display:grid;grid-template-columns:96px 1fr 1fr 1fr;gap:8px;margin:8px 0;}
+/* Dar ekranda 9-Box kendi içinde yatay kaydırılır; sayfayı taşırmaz. */
+@media(max-width:640px){ .ninebox{min-width:520px;} }
 .nb-corner{}
 .nb-axis-x{text-align:center;font-weight:700;color:var(--text-2);font-size:.8rem;align-self:end;padding-bottom:4px;}
 .nb-axis-y{display:flex;align-items:center;justify-content:flex-end;font-weight:700;
@@ -150,7 +153,20 @@ select[multiple]{min-height:104px;}
   border:none;border-radius:10px;padding:10px 18px;font-weight:700;font-size:.9rem;cursor:pointer;
   text-decoration:none;}
 .btn.secondary{background:#fff;color:var(--brand-2);border:1px solid var(--brand-2);}
+.btn.small{padding:5px 10px;font-size:.78rem;}
 .btn[aria-disabled="true"]{opacity:.55;pointer-events:none;}
+
+/* KPI drill-down (tıklanabilir kart) */
+.drillable{cursor:pointer;border-radius:var(--radius);outline:none;}
+.drillable .eks-kpi{transition:box-shadow .12s,transform .12s;}
+.drillable:hover .eks-kpi,.drillable:focus-visible .eks-kpi{
+  box-shadow:0 0 0 2px var(--brand-2),var(--shadow);transform:translateY(-1px);}
+.drillable .eks-kpi::after{content:"›";float:right;color:var(--brand-2);font-weight:800;
+  font-size:1.1rem;line-height:1;opacity:.6;}
+
+/* 9-Box boş hücre (bu kapsamda kayıt yok) */
+.nb-cell.nb-empty{opacity:.62;background:var(--bg-alt);}
+.nb-cell.nb-empty .ct{color:var(--text-2);}
 
 /* --- Çeşitli --- */
 .distros{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}

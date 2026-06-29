@@ -65,6 +65,33 @@ function renderQuality(el){
     {key:"Açıklama",label:"Açıklama",cls:"wrap-cell"},{key:"Örnek",label:"Örnek",cls:"wrap-cell"},
   ], issueRows);
 
+  // --- Kaynak ↔ Cockpit mutabakatı (Faz 1) ---
+  const recon = reconciliationChecks();
+  const failCount = recon.checks.filter(c => !c.ok && !c.warn).length;
+  const warnCount = recon.checks.filter(c => !c.ok && c.warn).length;
+  const reconRows = recon.checks.map(c => ({
+    "Kontrol": c.name,
+    "Beklenen": c.expected,
+    "Gerçekleşen": c.actual,
+    "Sonuç": c.ok ? ["✅ Tutarlı","success"] : (c.warn ? ["🟠 WARNING","warning"] : ["❌ Sapma","danger"]),
+    "Örnek": (c.sample || []).join(", "),
+  }));
+  const reconTable = buildTable([
+    {key:"Kontrol",label:"Kontrol",cls:"wrap-cell"},
+    {key:"Beklenen",label:"Beklenen"},{key:"Gerçekleşen",label:"Gerçekleşen"},
+    {key:"Sonuç",label:"Sonuç",rawFmt:v=>badge(v[0],v[1])},
+    {key:"Örnek",label:"Örnek",cls:"wrap-cell"},
+  ], reconRows);
+  const reconNote = failCount>0
+    ? note("err", `<b>${failCount} mutabakat sapması</b> — kaynak ile cockpit görünümü tutarsız.`)
+    : (warnCount>0
+        ? note("warn", `<b>${warnCount} uyarı</b> — eşlenmemiş Yedek_Tipi değer(ler)i var (Ready-now dışı sayıldı).`)
+        : note("ok", "Tüm mutabakat kontrolleri tutarlı (kaynak ↔ cockpit)."));
+  const reconBlock = `<h3>Kaynak ↔ Cockpit Mutabakatı</h3>
+    ${reconNote}${reconTable}
+    <div class="caption">9-Box toplamı tüm popülasyona zorla eşitlenmez; ekran kapsamı
+      (Talent Pool) esas alınır. Ready-now açığı iki bağımsız hesap yolundan doğrulanır.</div>`;
+
   el.innerHTML = `
     <h2>Veri Yükleme Durumu</h2>
     <div class="metric-grid">
@@ -75,6 +102,8 @@ function renderQuality(el){
     ${c.error===0
       ? note("ok","Kritik (ERROR) yapı/başlık sorunu yok — veri yüklenebilir.")
       : note("err","Kritik yapı/başlık sorunları var; aşağıdaki ERROR satırlarına bakın.")}
+
+    ${reconBlock}
 
     ${loadBlocks}
     ${overrideBlock}

@@ -81,6 +81,9 @@ function renderDetail(el){
     <div id="detail_body"></div>
   `;
   const body = document.getElementById("detail_body");
+  // KPI drill-down "Detayda aç" ile gelen önyükleme indeksi (varsa).
+  let initial = (typeof window.__pendingDetail === "number") ? window.__pendingDetail : null;
+  window.__pendingDetail = null;
   renderCascade(document.getElementById("detail_cascade"), DATA.positions, "detail",
-    row => { body.innerHTML = _renderDetailBody(row); });
+    row => { body.innerHTML = _renderDetailBody(row); }, initial);
 }

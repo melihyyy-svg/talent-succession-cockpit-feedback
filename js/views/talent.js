@@ -21,11 +21,14 @@ function _renderNinebox(mount, matrix){
     html += `<div class="nb-axis-y">Potansiyel<br>${esc(row[0].potential)}</div>`;
     row.forEach(c => {
       const sel = c.label===_talentState.cell ? " sel" : "";
+      const empty = c.count===0 ? " nb-empty" : "";
       const color = TONE_HEX[c.tone] || TONE_HEX.neutral;
-      html += `<button class="nb-cell${sel}" style="--ct:${color}" data-cell="${esc(c.label)}">
+      const sub = c.count===0 ? "Bu kapsamda kayıt yok"
+                              : `Pot: ${esc(c.potential)} · Perf: ${esc(c.performance)}`;
+      html += `<button class="nb-cell${sel}${empty}" style="--ct:${color}" data-cell="${esc(c.label)}">
         <div class="nm">${esc(c.label||"—")}</div>
         <div class="ct">${c.count}</div>
-        <div class="sub">Pot: ${esc(c.potential)} · Perf: ${esc(c.performance)}</div></button>`;
+        <div class="sub">${sub}</div></button>`;
     });
   });
   html += `</div>`;
@@ -63,6 +66,9 @@ function renderTalent(el){
     <div class="controls" id="talent_filters">${filterFields}</div>
 
     <h3>9-Box Görünümü</h3>
+    ${note("info", `<b>Kapsam: Talent Pool — ${summary.total} kişi.</b> Bu 9-Box görünümü
+      <b>tüm çalışan popülasyonunu değil</b>, yalnızca Talent Pool kapsamındaki kişileri
+      gösterir. Boş hücre (0) = <b>bu kapsamda kayıt yok</b> (veri hatası değildir).`)}
     <div class="caption">Hücreye tıklayarak kategoriye odaklanın. Yatay: Performans
       (Düşük→Yüksek) · Dikey: Potansiyel (Yüksek→Düşük); sayı = kişi.</div>
     <div id="talent_matrix"></div>
