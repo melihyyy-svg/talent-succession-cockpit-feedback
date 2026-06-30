@@ -20,7 +20,10 @@ veya analytics **kullanılmaz**.
 4. **Aday Keşfi** — pozisyon bağlamında şeffaf Talent Pool filtreleme + karşılaştırma.
 5. **Aksiyon Takip** — kaynak veride tanımlı önerilen aksiyonların görüntülenmesi ve
    filtrelenmesi (bu demo yeni aksiyon oluşturmaz/güncellemez).
-6. **Veri Kalitesi** — yükleme durumu, validation bulguları, teyitli firma override izleri.
+
+> **Veri Kalitesi** (yükleme durumu, validation bulguları, mutabakat kontrolleri) yönetici
+> sadeleştirmesi (V1.2-C) ile **üst navigasyondan kaldırıldı**; teknik kontrol katmanı olarak
+> `js/views/quality.js` + `js/recon.js` içinde korunur.
 
 İş kuralı sadakati: risk ve 9-Box değerleri **yeniden hesaplanmaz**; kaynaktaki
 hesaplanmış değerler taşınır.
@@ -123,10 +126,9 @@ python -m http.server 8000
 
 ## Geri bildirim
 
-Sayfa altındaki **Geri Bildirim** alanı 4 soru içerir ve GitHub Issue şablonuna
-(`.github/ISSUE_TEMPLATE/feedback.yml`) yönlendirir. Repo yayınlandıktan sonra
-`js/app.js` içindeki `FEEDBACK_REPO` sabitini `kullanici/repo` olarak doldurun;
-buton otomatik aktifleşir.
+Yönetici sadeleştirmesi (V1.2-C) ile sayfa içi **Geri Bildirim** bloğu kaldırıldı.
+Geri bildirim doğrudan repo'nun GitHub Issue şablonu
+(`.github/ISSUE_TEMPLATE/feedback.yml`) üzerinden iletilir.
 
 ## Yayın (GitHub Pages)
 

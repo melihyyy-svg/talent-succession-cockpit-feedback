@@ -145,10 +145,6 @@ select[multiple]{min-height:104px;}
   border-radius:10px;font-weight:600;cursor:pointer;color:var(--text-2);}
 .nb-allbtn.sel{color:var(--brand-2);border-color:var(--brand-2);}
 
-/* --- Geri bildirim paneli --- */
-.feedback{margin-top:26px;}
-.feedback ol{margin:.4rem 0 .8rem 1.1rem;padding:0;}
-.feedback li{margin:.25rem 0;}
 .btn{display:inline-block;background:linear-gradient(100deg,var(--brand-1),var(--brand-2));color:#fff;
   border:none;border-radius:10px;padding:10px 18px;font-weight:700;font-size:.9rem;cursor:pointer;
   text-decoration:none;}

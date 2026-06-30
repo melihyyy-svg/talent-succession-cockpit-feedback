@@ -1,9 +1,4 @@
-/* app.js — önyükleme, marka başlığı, sekme yönlendirme, geri bildirim alanı. */
-
-/* === Yapılandırma ===
-   Repo GitHub'da oluşturulduktan SONRA buraya "kullanici/repo" yazın; geri bildirim
-   butonu otomatik aktifleşir. Boş bırakılırsa buton pasif görünür. */
-const FEEDBACK_REPO = "melihyyy-svg/talent-succession-cockpit-feedback";
+/* app.js — önyükleme, marka başlığı, sekme yönlendirme. */
 
 const TABS = [
   {id:"exec",     label:"Yönetici Karar Özeti", render:renderExec},
@@ -12,7 +7,6 @@ const TABS = [
   {id:"talent",   label:"Talent Pool & 9-Box Explorer", render:renderTalent},
   {id:"discovery",label:"Aday Keşfi", render:renderDiscovery},
   {id:"actions",  label:"Aksiyon Takip", render:renderActions},
-  {id:"quality",  label:"Veri Kalitesi", render:renderQuality},
 ];
 
 function renderBrand(){
@@ -68,32 +62,6 @@ function openInDetailContext(ctx){
   activate("detail");
 }
 
-function renderFeedback(){
-  const questions = [
-    "İlk bakışta cockpit'in amacı anlaşılır mı?",
-    "En faydalı bulduğun ekran veya bilgi nedir?",
-    "Kafa karıştırıcı veya gereksiz bulduğun alan var mı?",
-    "Pilot öncesi tek öncelikli önerin nedir?",
-  ];
-  let button;
-  if(FEEDBACK_REPO){
-    const url = `https://github.com/${FEEDBACK_REPO}/issues/new?template=feedback.yml`;
-    button = `<a class="btn" href="${esc(url)}" target="_blank" rel="noopener">GitHub'da geri bildirim issue'su aç</a>`;
-  } else {
-    button = `<a class="btn" aria-disabled="true" href="#feedback">GitHub bağlantısı repo yayınlanınca aktifleşir</a>`;
-  }
-  document.getElementById("feedback").innerHTML = `
-    <div class="panel">
-      <h3>Geri Bildirim</h3>
-      <p class="muted">Pilot öncesi görüşlerin çok değerli. Aşağıdaki sorulara kısa yanıt
-        verip GitHub Issue olarak iletebilirsin:</p>
-      <ol>${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ol>
-      ${button}
-      <div class="caption">Harici analytics/telemetri yoktur; geri bildirim yalnızca
-        senin açtığın GitHub Issue üzerinden toplanır.</div>
-    </div>`;
-}
-
 async function boot(){
   try {
     await loadAllData();
@@ -105,7 +73,6 @@ async function boot(){
     return;
   }
   renderBrand();
-  renderFeedback();
   const initial = (location.hash || "").replace("#","");
   activate(TABS.some(t=>t.id===initial) ? initial : "exec");
 }
