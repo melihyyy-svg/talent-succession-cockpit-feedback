@@ -80,6 +80,19 @@ function _repIndex(group){
   return DATA.positions.indexOf(rep);
 }
 
+/* Grup liste sıralaması: ACİL → YÜKSEK → Toplam Risk azalan → pozisyon adı alfabetik. */
+function _sortGroupList(arr){
+  const rank = u => { const i=["ACİL","YÜKSEK"].indexOf(String(u).trim()); return i<0?2:i; };
+  return [...arr].sort((a,b)=>{
+    const ra=rank(a[C.URGENCY]), rb=rank(b[C.URGENCY]);
+    if(ra!==rb) return ra-rb;
+    const xa=num(a[C.RISK_TOTAL]), xb=num(b[C.RISK_TOTAL]);
+    const da=Number.isNaN(xa)?-Infinity:xa, db=Number.isNaN(xb)?-Infinity:xb;
+    if(db!==da) return db-da;
+    return String(a["Pozisyon"]).localeCompare(String(b["Pozisyon"]),"tr");
+  });
+}
+
 let _heatUpdate = () => {};
 
 function renderHeatmap(el){
@@ -223,13 +236,18 @@ function renderHeatmap(el){
 
   function _wireHeatDrill(btn){
     btn.onclick = () => {
-      const rep = Number(btn.getAttribute("data-rep"));
-      if(Number.isNaN(rep) || rep<0) return;
+      const firma = btn.getAttribute("data-firma");
+      const seviye = btn.getAttribute("data-seviye");
+      const lens = HEAT_LENSES[_heatState.lens];
+      const group = _group(firma, seviye);
+      // Seçili Firma+Seviye+aktif lens koşuluna uyan TÜM pozisyonlar (mevcut yüklem).
+      const matching = _sortGroupList(group.filter(lens.metric));
+      const matchIndices = matching.map(p => DATA.positions.indexOf(p));
+      const primary = matchIndices.length ? matchIndices[0] : _repIndex(group);
+      if(primary == null || primary < 0) return;
       openInDetailContext({
-        firma: btn.getAttribute("data-firma"),
-        seviye: btn.getAttribute("data-seviye"),
-        lens: HEAT_LENSES[_heatState.lens].label,
-        positionIndex: rep,
+        firma, seviye, lensLabel: lens.label,
+        matchIndices, groupTotal: group.length, positionIndex: primary,
       });
     };
   }

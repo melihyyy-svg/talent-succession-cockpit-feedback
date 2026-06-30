@@ -289,6 +289,22 @@ table.heatmap th.hm-rowhead{text-align:left;background:var(--bg-alt);border-radi
 .hc-empty{min-height:86px;display:flex;align-items:center;justify-content:center;
   color:var(--text-2);font-size:.8rem;padding:10px;}
 
+/* Heatmap → Detay: grup pozisyon listesi (bağlam bandı altında, responsive kart) */
+.grouplist{display:flex;flex-direction:column;gap:8px;margin:8px 0 6px;}
+.gl-card{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;
+  box-shadow:var(--shadow);}
+.gl-card.active{outline:2px solid var(--brand-2);outline-offset:1px;}
+.gl-main{display:flex;flex-direction:column;gap:2px;min-width:210px;flex:1 1 210px;}
+.gl-main b{font-size:.95rem;}
+.gl-main span{color:var(--text-2);font-size:.8rem;}
+.gl-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.gl-risk{color:var(--text-2);font-size:.8rem;font-variant-numeric:tabular-nums;}
+@media(max-width:560px){
+  .gl-card{align-items:flex-start;}
+  .gl-meta{width:100%;}
+}
+
 /* --- Çeşitli --- */
 .distros{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
 .expander{border:1px solid var(--border);border-radius:12px;background:#fff;margin:8px 0;}

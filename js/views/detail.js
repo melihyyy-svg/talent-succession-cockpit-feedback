@@ -73,28 +73,75 @@ function _renderDetailBody(row){
   `;
 }
 
+/* Heatmap seçimindeki (Firma+Seviye+lens) pozisyon listesi — bağlam bandı altında kalır.
+   onPick(idx): seçilen pozisyona göre cascade + detay kartı güncellenir. */
+function _renderDetailGroupList(host, ctx, onPick){
+  const items = (ctx.matchIndices || []).map(i => ({i, p: DATA.positions[i]}));
+  const header = `${disp(ctx.firma)} · ${disp(ctx.seviye)} · ${disp(ctx.lensLabel)} — `
+    + `${items.length} / ${ctx.groupTotal} pozisyon`;
+  let body;
+  if(!items.length){
+    body = emptyState("Bu lens koşulunu sağlayan pozisyon yok; aşağıdaki seçimle grupta gezinebilirsiniz.");
+  } else {
+    body = `<div class="grouplist">` + items.map(({i,p}) => {
+      const ready = positionHasReady(p), has = hasBackup(p);
+      return `<div class="gl-card" data-card="${i}">
+        <div class="gl-main"><b>${esc(disp(p["Pozisyon"]))}</b>
+          <span>${esc(disp(p["İsim"]))} · ${esc(disp(p["Firma"]))} · ${esc(disp(p["Şehir"]))}</span></div>
+        <div class="gl-meta">
+          ${badge(disp(p["Aciliyet_Final"]))}
+          <span class="gl-risk">Risk ${esc(disp(p["Toplam_Risk"]))}</span>
+          ${badge(has?"Yedek var":"Yedek yok", has?"success":"danger")}
+          ${badge(ready?"Hazır halef var":"Hazır halef yok", ready?"success":(has?"warning":"danger"))}
+          <button class="btn secondary small" data-gpos="${i}">Detayı aç →</button>
+        </div></div>`;
+    }).join("") + `</div>`;
+  }
+  host.innerHTML = `<div class="section-head" style="margin-top:6px">
+      <h3>Bu heatmap seçimi içinde incelenebilecek pozisyonlar</h3></div>
+    <div class="caption">${esc(header)}</div>${body}`;
+
+  host.querySelectorAll("[data-gpos]").forEach(btn => btn.onclick = () => {
+    const idx = Number(btn.getAttribute("data-gpos"));
+    host.querySelectorAll(".gl-card").forEach(c =>
+      c.classList.toggle("active", Number(c.getAttribute("data-card")) === idx));
+    onPick(idx);
+  });
+}
+
 function renderDetail(el){
   // Heatmap'ten gelindiyse bağlam bandı (hangi Firma/Seviye/lens kapsamından).
   const ctx = window.__detailContext;
   window.__detailContext = null;
+  const initial = (typeof window.__pendingDetail === "number") ? window.__pendingDetail : null;
+  window.__pendingDetail = null;
+
   const ctxBanner = ctx
     ? note("info", `Geldiğiniz bağlam — <b>Halefiyet Sağlığı</b>: Firma
         <b>${esc(disp(ctx.firma))}</b> · Seviye <b>${esc(disp(ctx.seviye))}</b> ·
-        Lens <b>${esc(disp(ctx.lens))}</b>. Aşağıda bu gruptan öncelikli pozisyon
-        önyüklendi; Firma/Ünvan seçimini değiştirerek aynı grupta gezinebilirsiniz.`)
+        Lens <b>${esc(disp(ctx.lensLabel))}</b>. Aşağıdaki listeden bu gruptaki tüm
+        ilgili pozisyonları inceleyebilirsiniz.`)
     : "";
 
   el.innerHTML = `
     <h2>Pozisyon &amp; Yedek Detayı</h2>
     ${ctxBanner}
+    <div id="detail_grouplist"></div>
     <div class="caption">🔎 Pozisyon seç: Firma → Ünvan → Mevcut Pozisyon Sahibi</div>
     <div id="detail_cascade"></div>
     <div id="detail_body"></div>
   `;
+  const cascadeMount = document.getElementById("detail_cascade");
   const body = document.getElementById("detail_body");
-  // KPI / heatmap drill-down ile gelen önyükleme indeksi (varsa).
-  let initial = (typeof window.__pendingDetail === "number") ? window.__pendingDetail : null;
-  window.__pendingDetail = null;
-  renderCascade(document.getElementById("detail_cascade"), DATA.positions, "detail",
-    row => { body.innerHTML = _renderDetailBody(row); }, initial);
+
+  function selectPosition(idx){
+    renderCascade(cascadeMount, DATA.positions, "detail",
+      row => { body.innerHTML = _renderDetailBody(row); }, idx);
+  }
+
+  // Heatmap grubu listesi (varsa) — bağlam bandının hemen altında, kalıcı.
+  if(ctx && Array.isArray(ctx.matchIndices)){
+    _renderDetailGroupList(document.getElementById("detail_grouplist"), ctx, selectPosition);
+  }
+  selectPosition(initial);
 }
