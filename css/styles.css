@@ -339,6 +339,52 @@ table.heatmap th.hm-rowhead{text-align:left;background:var(--bg-alt);border-radi
 .rev-tag b{color:var(--text);}
 @media(max-width:560px){ .rev-tags{gap:8px;} }
 
+/* ===================================================================
+   Pozisyon Karar Dosyası (Position Decision File)
+   =================================================================== */
+.pdh{background:linear-gradient(100deg,var(--brand-1),var(--brand-2));border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:18px 22px;color:#fff;}
+.pdh-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+.pdh-eyebrow{color:#dfe3ff;font-weight:800;letter-spacing:.14em;font-size:.72rem;}
+.pdh-title{color:#fff;font-weight:800;font-size:1.4rem;line-height:1.15;margin:4px 0 4px;letter-spacing:-.01em;}
+.pdh-meta{color:#e6e9ff;font-size:.9rem;}
+.pdh-meta b{color:#fff;}
+.pdh-status{background:#fff;font-size:.84rem;}
+.pdh-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;}
+.pdh-risk{color:#e6e9ff;font-size:.9rem;} .pdh-risk b{color:#fff;}
+.pdh-summary{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.22);
+  color:#fff;font-size:.96rem;}
+.pdh-summary b{color:#fff;}
+
+.decision-cols{display:grid;gap:14px;grid-template-columns:1fr 1fr;}
+@media(max-width:760px){.decision-cols{grid-template-columns:1fr;}}
+.decision-mod{margin:0;}
+.decision-mod h4{margin:0 0 10px;font-size:1rem;color:var(--text);font-weight:750;}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;}
+.kv>div{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  border-bottom:1px solid var(--border);padding:4px 0;font-size:.86rem;}
+.kv>div>span{color:var(--text-2);}
+.fchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;}
+.fchip{background:var(--bg-alt);border:1px solid var(--border);border-radius:8px;
+  padding:4px 9px;font-size:.76rem;color:var(--text-2);}
+.fchip b{color:var(--text);}
+
+.bk-group-h{font-weight:700;color:var(--text-2);font-size:.86rem;margin:12px 0 6px;}
+.bk-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));}
+.bk-card{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--bkc,#5A6072);
+  border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);}
+.bk-card.t-success{--bkc:var(--success);}
+.bk-card.t-neutral{--bkc:var(--neutral);}
+.bk-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.bk-head b{font-size:.94rem;}
+.bk-sub{color:var(--text-2);font-size:.82rem;margin:4px 0 8px;}
+.bk-tags{display:flex;flex-direction:column;gap:3px;font-size:.8rem;color:var(--text-2);}
+.bk-tags b{color:var(--text);}
+
+ul.topics{margin:.3rem 0 .4rem 1.1rem;padding:0;}
+ul.topics li{margin:.3rem 0;}
+@media(max-width:560px){ .kv{grid-template-columns:1fr;} .bk-grid{grid-template-columns:1fr;} }
+
 /* --- Çeşitli --- */
 .distros{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
 .expander{border:1px solid var(--border);border-radius:12px;background:#fff;margin:8px 0;}
