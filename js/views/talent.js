@@ -221,6 +221,7 @@ function _renderKalibrasyonMode(host){
       </div>
       <div class="exec-meta" id="kalib_meta"></div>
     </header>
+    <nav class="breadcrumb" id="kalib_breadcrumb" aria-label="Bağlam"></nav>
 
     <div class="controls" id="kalib_filters">
       ${multiselectField("kf_firma","Firma", firmaOpts)}
@@ -250,6 +251,7 @@ function _renderKalibrasyonMode(host){
   `;
 
   const metaEl = document.getElementById("kalib_meta");
+  const breadcrumbEl = document.getElementById("kalib_breadcrumb");
   const groupsEl = document.getElementById("kalib_groups");
   const matrixEl = document.getElementById("kalib_matrix");
   const activeEl = document.getElementById("kalib_active");
@@ -270,15 +272,30 @@ function _renderKalibrasyonMode(host){
       <span class="meta-chip">Veri: ${esc(DATA.meta.generated_at)}</span>
       <span class="meta-chip dq-ok">Kalibrasyon Görünümü</span>`;
 
-    // Grup kartları (örtüşebilir; toplam HEADCOUNT olarak sunulmaz)
+    // Standart breadcrumb (gerçek seçili Firma/Seviye + aktif grup/hücre bağlamı)
+    let selText = "(seçim yok)";
+    if(_kalibState.sel){
+      if(_kalibState.sel.type==="group"){
+        const g = KALIB_GROUPS.find(x => x.key===_kalibState.sel.key);
+        selText = g ? g.label : "";
+      } else { selText = "9-Box: " + _kalibState.sel.label; }
+    }
+    breadcrumbEl.innerHTML = `Talent Review <i>→</i> ${esc(fLabel)} <i>→</i> ${esc(sLabel)}
+      <i>→</i> ${esc(selText)}`;
+
+    // Grup kartları (örtüşebilir; toplam HEADCOUNT olarak sunulmaz; tüm kart tıklanabilir)
     groupsEl.innerHTML = KALIB_GROUPS.map(gr => {
       const n = scope.filter(gr.match).length;
       const active = _kalibState.sel && _kalibState.sel.type==="group" && _kalibState.sel.key===gr.key;
-      return `<button class="kalib-card${active?" active":""}" data-group="${gr.key}">
+      const empty = n === 0;
+      const cue = empty ? `<div class="kc-go kc-empty">Bu kapsamda kayıt yok</div>`
+                        : `<div class="kc-go">Listeyi incele →</div>`;
+      return `<button class="kalib-card${active?" active":""}${empty?" empty":""}" data-group="${gr.key}"
+          aria-pressed="${active?"true":"false"}">
         <div class="kc-count">${n}</div>
         <div class="kc-label">${esc(gr.label)}</div>
         <div class="kc-desc">${esc(gr.desc)}</div>
-        <div class="kc-go">Listeyi incele →</div></button>`;
+        ${cue}</button>`;
     }).join("");
     groupsEl.querySelectorAll("[data-group]").forEach(btn => btn.onclick = () => {
       _kalibState.sel = {type:"group", key: btn.getAttribute("data-group")}; _kalibUpdate();

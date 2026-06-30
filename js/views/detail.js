@@ -5,6 +5,108 @@
 /* Kaynakta olmayan/boş alan için çıkarım üretme: 'Kaynakta belirtilmedi'. */
 function _dispSrc(v){ return isBlank(v) ? "Kaynakta belirtilmedi" : v; }
 
+/* === V1.1: Hızlı Halef Kartı (sağdan açılan drawer) === */
+let _currentRow = null;        // aktif pozisyon (drawer başlığı için)
+let _currentBackups = [];      // aktif pozisyonun yedekleri: Ready-now önce, sonra hazırlananlar
+let _drawerIdx = -1;
+
+function _ensureDrawer(){
+  if(document.getElementById("succ_overlay")) return;
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `<div class="succ-overlay" id="succ_overlay" hidden>
+      <aside class="succ-drawer" id="succ_drawer" role="dialog" aria-modal="true" aria-label="Hızlı Halef Kartı">
+        <div class="sd-head">
+          <div><div class="sd-eyebrow">HIZLI HALEF KARTI</div>
+            <div class="sd-target" id="sd_target"></div></div>
+          <button class="sd-close" id="sd_close" aria-label="Kapat" title="Kapat (Esc)">✕</button>
+        </div>
+        <div class="sd-nav" id="sd_nav"></div>
+        <div class="sd-body" id="sd_body"></div>
+        <div class="sd-note">Bu kart mevcut Yedek Verisi kaydını gösterir. Nihai hazır oluşluk
+          ve görevlendirme değerlendirmesi yönetici ve İK kalibrasyonunda yapılır.</div>
+      </aside></div>`;
+  document.body.appendChild(wrap.firstElementChild);
+  const overlay = document.getElementById("succ_overlay");
+  overlay.addEventListener("click", e => { if(e.target === overlay) _closeDrawer(); });
+  document.getElementById("sd_close").onclick = _closeDrawer;
+}
+
+function _drawerKeydown(e){ if(e.key === "Escape") _closeDrawer(); }
+
+function _kvRow(label, valueHtml){
+  return `<div><span>${esc(label)}</span><div class="sd-val">${valueHtml}</div></div>`;
+}
+
+function _highlightBk(){
+  document.querySelectorAll(".bk-card").forEach(c =>
+    c.classList.toggle("active", Number(c.getAttribute("data-bk")) === _drawerIdx));
+}
+
+function _renderDrawer(){
+  const b = _currentBackups[_drawerIdx];
+  if(!b) return;
+  const ready = isReadyBackup(b);
+  document.getElementById("sd_target").innerHTML =
+    `Hedef pozisyon: <b>${esc(disp(_currentRow["Pozisyon"]))}</b> · ${esc(disp(_currentRow["Firma"]))}`;
+  const nav = document.getElementById("sd_nav");
+  nav.innerHTML = _currentBackups.length > 1
+    ? `<button class="btn secondary small" id="sd_prev" ${_drawerIdx===0?"disabled":""}>‹ Önceki</button>
+       <span class="sd-count">${_drawerIdx+1} / ${_currentBackups.length} halef</span>
+       <button class="btn secondary small" id="sd_next" ${_drawerIdx===_currentBackups.length-1?"disabled":""}>Sonraki ›</button>`
+    : "";
+  const assess = isBlank(b["Yedek_Assess"]) ? "Kaynakta belirtilmedi" : trNumber(b["Yedek_Assess"],2);
+  document.getElementById("sd_body").innerHTML = `<div class="sd-kv">
+    ${_kvRow("Yedek adı", `<b>${esc(disp(b["Yedek_İsim"]))}</b>`)}
+    ${_kvRow("Mevcut görev", esc(_dispSrc(b["Yedek_Görev"])))}
+    ${_kvRow("Yedek firma", esc(_dispSrc(b["Yedek_Firma"])))}
+    ${_kvRow("Yedek şehir", esc(_dispSrc(b["Yedek_Şehir"])))}
+    ${_kvRow("Yedek tipi", esc(_dispSrc(b["Yedek_Tipi"])))}
+    ${_kvRow("Ready-now durumu", badge(ready?"Hazır":"Hazırlanıyor / değil", ready?"success":"warning"))}
+    ${_kvRow("Assessment", `<b>${esc(assess)}</b>`)}
+    ${_kvRow("Performans", esc(_dispSrc(b["Yedek_Perf"])))}
+    ${_kvRow("9-Box", badge(_dispSrc(b["Yedek_9Box"]), nineboxTone(b["Yedek_9Box"])))}
+    ${_kvRow("Coğrafi uyum", esc(_dispSrc(b["Coğrafi_Uyum"])))}
+    ${_kvRow("Fonksiyonel uyum", esc(_dispSrc(b["Fonksiyonel_Uyum"])))}
+    ${_kvRow("Ayrılma riski", esc(_dispSrc(b["Ayrılma_Riski"])))}
+    ${_kvRow("Çoklu yedek", esc(_dispSrc(b["Çoklu_Yedek"])))}
+  </div>`;
+  if(_currentBackups.length > 1){
+    const prev = document.getElementById("sd_prev"), next = document.getElementById("sd_next");
+    if(prev) prev.onclick = () => { if(_drawerIdx>0){ _drawerIdx--; _renderDrawer(); _highlightBk(); } };
+    if(next) next.onclick = () => { if(_drawerIdx<_currentBackups.length-1){ _drawerIdx++; _renderDrawer(); _highlightBk(); } };
+  }
+}
+
+function _openDrawer(idx){
+  _ensureDrawer();
+  _drawerIdx = idx;
+  _renderDrawer();
+  _highlightBk();
+  const overlay = document.getElementById("succ_overlay");
+  overlay.hidden = false;
+  requestAnimationFrame(() => overlay.classList.add("open"));
+  document.addEventListener("keydown", _drawerKeydown);
+  const c = document.getElementById("sd_close"); if(c) c.focus();
+}
+
+function _closeDrawer(){
+  const overlay = document.getElementById("succ_overlay");
+  if(!overlay || overlay.hidden) return;
+  overlay.classList.remove("open");
+  document.removeEventListener("keydown", _drawerKeydown);
+  setTimeout(() => { overlay.hidden = true; }, 220);
+  document.querySelectorAll(".bk-card.active").forEach(c => c.classList.remove("active"));
+}
+
+/* Karar dosyası gövdesindeki halef kartlarını drawer'a bağlar (tüm kart tıklanabilir). */
+function _wireBackupCards(scope){
+  scope.querySelectorAll(".bk-card[data-bk]").forEach(card => {
+    const open = () => _openDrawer(Number(card.getAttribute("data-bk")));
+    card.onclick = open;
+    card.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); open(); } };
+  });
+}
+
 /* Pozisyon durum etiketi (mevcut risk + tanımlı yedek + Ready-now'dan kural-bazlı).
    Öncelik: Korunaklı > Kritik Açık (yüksek aciliyet + hazır yok) > Yedeksiz > Hazır Halef Açığı. */
 function _positionStatus(row){
@@ -101,10 +203,11 @@ function _successionModule(row, st, bk){
   </div>`;
 }
 
-/* 3) Tanımlı halef kartı. */
-function _backupCard(b){
+/* 3) Tanımlı halef kartı (tıklanınca Hızlı Halef Kartı drawer'ı açılır). */
+function _backupCard(b, idx){
   const ready = isReadyBackup(b);
-  return `<div class="bk-card t-${ready?"success":"neutral"}">
+  return `<div class="bk-card t-${ready?"success":"neutral"}" data-bk="${idx}" role="button"
+       tabindex="0" aria-label="${esc(disp(b["Yedek_İsim"]))} — hızlı halef kartını aç">
     <div class="bk-head"><b>${esc(disp(b["Yedek_İsim"]))}</b>
       ${badge(ready?"Ready-now (Hazır)":"Hazırlanıyor / değil", ready?"success":"warning")}</div>
     <div class="bk-sub">${esc(_dispSrc(b["Yedek_Görev"]))} · ${esc(_dispSrc(b["Yedek_Firma"]))} ·
@@ -118,7 +221,8 @@ function _backupCard(b){
       <span>Performans: <b>${esc(_dispSrc(b["Yedek_Perf"]))}</b></span>
       <span>Ayrılma riski: <b>${esc(_dispSrc(b["Ayrılma_Riski"]))}</b></span>
       <span>Çoklu yedek: <b>${esc(_dispSrc(b["Çoklu_Yedek"]))}</b></span>
-    </div></div>`;
+    </div>
+    <div class="bk-open">Hızlı halef kartı →</div></div>`;
 }
 
 function _backupComparison(bk){
@@ -127,14 +231,18 @@ function _backupComparison(bk){
       kalibrasyonda değerlendirilebilir; Talent Pool &amp; 9-Box veya Aday Keşfi
       sekmelerinden aday görünürlüğü incelenebilir.`);
   }
+  // Index = _currentBackups (Ready-now + hazırlananlar) dizisindeki konum.
+  let k = 0;
+  const readyCards = bk.ready.map(b => _backupCard(b, k++)).join("");
+  const prepCards = bk.prep.map(b => _backupCard(b, k++)).join("");
   const readyBlock = bk.ready.length
     ? `<div class="bk-group-h">Ready-now halefler (${bk.ready.length})</div>
-       <div class="bk-grid">${bk.ready.map(_backupCard).join("")}</div>`
+       <div class="bk-grid">${readyCards}</div>`
     : `<div class="bk-group-h">Ready-now halefler (0)</div>
        ${emptyState("Bu pozisyon için Ready-now (hazır) halef bulunmuyor.")}`;
   const prepBlock = bk.prep.length
     ? `<div class="bk-group-h">Hazırlanan / Ready-now olmayan halefler (${bk.prep.length})</div>
-       <div class="bk-grid">${bk.prep.map(_backupCard).join("")}</div>`
+       <div class="bk-grid">${prepCards}</div>`
     : "";
   return readyBlock + prepBlock +
     `<div class="caption">İlişki: Yedek Verisi.Pozisyon_Sahibi → Pozisyon Verisi.İsim.
@@ -159,8 +267,11 @@ function _calibrationTopics(row, bk){
 
 function _renderDetailBody(row){
   if(!row) return emptyState("Gösterilecek pozisyon yok.");
+  _closeDrawer();                                  // pozisyon değişince açık drawer'ı kapat
   const st = _positionStatus(row);
   const bk = _positionBackups(row["İsim"]);
+  _currentRow = row;                               // drawer bağlamı
+  _currentBackups = bk.ready.concat(bk.prep);      // Ready-now önce, sonra hazırlananlar
   const ambiguity = nameOccurrenceCount(row["İsim"]) > 1
     ? note("info", `Bu isim birden fazla pozisyonda görünüyor; yedek eşleşmesi isim
         üzerinden yapıldığından bazı adaylar başka bir pozisyona ait olabilir
@@ -251,7 +362,15 @@ function renderDetail(el){
         ilgili pozisyonları inceleyebilirsiniz.`)
     : "";
 
+  // Standart breadcrumb (yalnızca heatmap bağlamı varsa) — gerçek seçili Firma/Seviye/lens.
+  const breadcrumb = ctx
+    ? `<nav class="breadcrumb" aria-label="Bağlam">Halefiyet Sağlığı
+        <i>→</i> ${esc(disp(ctx.firma))} <i>→</i> ${esc(disp(ctx.seviye))}
+        <i>→</i> ${esc(disp(ctx.lensLabel))}</nav>`
+    : "";
+
   el.innerHTML = `
+    ${breadcrumb}
     <h2>Pozisyon &amp; Yedek Detayı</h2>
     ${ctxBanner}
     <div id="detail_grouplist"></div>
@@ -264,7 +383,7 @@ function renderDetail(el){
 
   function selectPosition(idx){
     renderCascade(cascadeMount, DATA.positions, "detail",
-      row => { body.innerHTML = _renderDetailBody(row); }, idx);
+      row => { body.innerHTML = _renderDetailBody(row); _wireBackupCards(body); }, idx);
   }
 
   // Heatmap grubu listesi (varsa) — bağlam bandının hemen altında, kalıcı.
