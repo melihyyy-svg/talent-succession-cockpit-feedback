@@ -12,9 +12,27 @@ const _talentState = { cell: "Tümü" };
 function _talentExplorerColumns(){
   return C.TALENT_EXPLORER.map(([key,label]) => {
     if(key in C.TALENT_NUMERIC) return {key,label,fmt:v=>trNumber(v, C.TALENT_NUMERIC[key])};
-    if(key==="Gerekçe") return {key,label,cls:"wrap-cell",fmt:v=>disp(v)};
+    if(key==="Gerekçe") return {key,label,cls:"rationale-cell",rawFmt:v=>_rationaleCell(v)};
     return {key,label,fmt:v=>disp(v)};
   });
+}
+
+/* Explorer "Gerekçe" hücresi: satır yüksekliğini şişirmemesi için kompakt önizleme —
+   gerçek metnin deterministik ilk ~90 karakteri, CSS line-clamp ile en fazla 2 satır,
+   kesilince sonda "…". Tam gerekçe KAYBOLMAZ: yalnızca kesildiğinde, talep üzerine tam metni
+   açan <details> "Detay" (mevcut inline expander deseni; yeni drawer/modal/rota YOK). Boş -> "Veri eksik".
+   Drill-down davranışı değişmez. */
+function _rationaleCell(v){
+  if(isBlank(v)) return `<span class="muted">Veri eksik</span>`;
+  const full = String(v).replace(/\s+/g, " ").trim();
+  const LIMIT = 90;
+  const truncated = full.length > LIMIT;
+  const short = truncated ? full.slice(0, LIMIT).trim() + "…" : full;
+  const more = truncated
+    ? `<details class="rationale-more"><summary>Detay</summary>
+        <div class="rationale-full">${esc(full)}</div></details>`
+    : "";
+  return `<div class="rationale-preview">${esc(short)}</div>${more}`;
 }
 
 function _renderNinebox(mount, matrix){

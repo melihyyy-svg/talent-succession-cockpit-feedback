@@ -122,6 +122,16 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
    vertical-align:top ve wrap-cell'in white-space:normal'ı korunur → uzun metin doğal büyür. */
 #talent_table table.data th,
 #talent_table table.data td{padding:5px 11px;line-height:1.2;}
+/* Gerekçe sütunu — kompakt önizleme (en fazla 2 satır, line-clamp) + talep üzerine tam metin.
+   Uzun metin sarımı satırı şişirmesin; tam gerekçe "Detay" ile açılır (yalnızca #talent_table). */
+#talent_table table.data td.rationale-cell{white-space:normal;min-width:200px;max-width:300px;vertical-align:top;}
+#talent_table .rationale-preview{display:-webkit-box;-webkit-box-orient:vertical;
+  -webkit-line-clamp:2;line-clamp:2;overflow:hidden;}
+#talent_table .rationale-more{margin-top:2px;}
+#talent_table .rationale-more>summary{cursor:pointer;color:var(--brand-2);font-size:.8rem;
+  list-style:none;display:inline-block;}
+#talent_table .rationale-more>summary::-webkit-details-marker{display:none;}
+#talent_table .rationale-full{margin-top:4px;font-size:.82rem;color:var(--text-2);white-space:normal;}
 
 /* --- Filtre / form kontrolleri --- */
 .controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:10px 0;}
