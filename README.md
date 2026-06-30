@@ -25,6 +25,33 @@ veya analytics **kullanılmaz**.
 İş kuralı sadakati: risk ve 9-Box değerleri **yeniden hesaplanmaz**; kaynaktaki
 hesaplanmış değerler taşınır.
 
+## V1.1 – Karar Kanıtı ve Aksiyon Bağlantısı
+
+Mevcut ekranlara, **yeni tab/metrik/skor olmadan**, mevcut veriyi karar için şeffaf kılan
+bir kanıt katmanı eklendi. Hiçbir mevcut hesap, lens toplamı veya mutabakat (9/9 · 6/6 ·
+7/7) değişmedi; AI/öneri/tahmin/otomatik sıralama üretilmez. Desteklenmeyen alanlar dürüst
+boş durumla gösterilir: `Kayıt bulunmuyor`, `Veri eksik`, `Kalibrasyon tarihi yok`.
+
+- **Halefiyet Karar Kanıtı** (Hızlı Halef Kartı / drawer): bir halefin neden değerlendirildiğini
+  görünür kılan kompakt özet — mevcut readiness (Yedek_Tipi), performans, 9-Box, assessment,
+  uyum sinyalleri ve eksik kanıt listesi. Tarih/sıralama alanı kaynakta yoksa dürüst boş.
+- **Neden Kritik? / Bugünkü Risk** (Pozisyon Karar Dosyası): rolün kritikliğini iş etkisi,
+  yerine koyma zorluğu, kurumsal bilgi bağımlılığı, boş kalma etkisi (F3–F5 + Kritik_Bilgi/
+  Bilgi_Etkisi) üzerinden açıklar; bugünkü risk Ready-now durumu, tek kişiye bağımlılık ve
+  eksik veriyle gösterilir.
+- **Çoklu kritik rol adaylığı** mikro-uyarısı: bir halef birden fazla kritik role aday/Ready-now
+  ise gösterilir (yalnızca gerçek `Pozisyon_Sahibi → Yedek_İsim` ilişkisinden; mevcut veride
+  çoklu-rol bulunmadığından görünmez).
+- **Readiness açıkları ve aksiyonlar**: readiness açığı mevcut kurallardan; aksiyonlar
+  pozisyona **bağlanmaz** (kaynakta sahip/termin/durum ve doğrulanmış aday↔aksiyon anahtarı
+  yoktur — Faz 2).
+- **Talent Review karar kaydı**: kalibrasyon inceleme kartında Talent Kararı, Succession,
+  Gerekçe görünür; kararı veren / sonraki gözden geçirme tarihi / açık aksiyon kaynakta
+  olmadığından `Kayıt bulunmuyor`.
+
+Yeni saf hesaplar `js/calc.js` içinde (`candidateRoleLinks`, `multiRoleCandidacy`,
+`successorEvidence`, `positionDataGaps`); testler: `python tools/test_v11.py` (11/11).
+
 ## Veri üretimi
 
 `data/*.json` dosyaları, kaynak Excel'lerden **yerelde** üretilir. Excel dosyaları

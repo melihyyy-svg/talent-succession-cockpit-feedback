@@ -344,6 +344,15 @@ function _renderKalibrasyonMode(host){
           <span class="rev-tag">Assessment: <b>${esc(trNumber(p["Assessment"],2))}</b></span>
           <span class="rev-tag">Performans: <b>${esc(disp(p["Performans"]))}</b></span>
           <span class="rev-tag">Potansiyel: <b>${esc(disp(p["Potansiyel"]))}</b></span>
+        </div>
+        <div class="rev-decision">
+          <div class="rd-line"><span>Karar durumu:</span>
+            ${isBlank(p["Talent Kararı"]) ? `<span class="muted">Karar kaydı bulunmuyor</span>`
+              : badge(disp(p["Talent Kararı"]), "neutral")}
+            <span class="rd-sep">·</span> Succession: <b>${esc(disp(p["Succession"]))}</b></div>
+          <div class="rd-line muted">Karar gerekçesi: ${esc(disp(p["Gerekçe"]))}</div>
+          <div class="rd-line muted">Kararı veren / kalibrasyon grubu · Sonraki gözden geçirme tarihi ·
+            Açık aksiyon: Kayıt bulunmuyor</div>
         </div></div>`;
     }).join("") + `</div>`;
   };

@@ -441,6 +441,34 @@ ul.topics li{margin:.3rem 0;}
   font-size:.78rem;background:var(--bg-alt);}
 @media(max-width:560px){ .succ-drawer{width:100%;} }
 
+/* Halefiyet Karar Kanıtı (drawer içi özet) */
+.evidence{background:var(--brand-bg);border:1px solid #d9d0f0;border-radius:12px;
+  padding:12px 14px;margin-bottom:14px;}
+.ev-h{font-weight:750;font-size:.92rem;color:var(--brand-2);margin-bottom:4px;}
+.ev-summary{font-size:.85rem;margin-bottom:6px;}
+.ev-line{font-size:.82rem;color:var(--text-2);margin:2px 0;}
+.ev-line b{color:var(--text);}
+.ev-note{font-size:.74rem;color:var(--text-2);margin-top:6px;}
+
+/* Neden Kritik · Bugünkü Risk · Readiness-Aksiyon blokları */
+.crit-cols{display:grid;gap:14px;grid-template-columns:1fr 1fr;}
+@media(max-width:760px){.crit-cols{grid-template-columns:1fr;}}
+.crit-block{margin:0;}
+.crit-block h4{margin:0 0 8px;font-size:1rem;font-weight:750;color:var(--text);}
+.crit-kv{display:flex;flex-direction:column;gap:2px;}
+.crit-kv>div{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+  padding:6px 0;border-bottom:1px solid var(--border);font-size:.85rem;}
+.crit-kv>div>span{color:var(--text-2);flex:0 0 auto;max-width:46%;}
+.crit-val{text-align:right;}
+.multi-role{margin:6px 0 2px;display:flex;gap:6px;flex-wrap:wrap;}
+
+/* Talent Review — karar kaydı */
+.rev-decision{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.rd-line{font-size:.82rem;margin:2px 0;}
+.rd-line.muted{color:var(--text-2);}
+.rd-line span{color:var(--text-2);}
+.rd-sep{color:var(--border);margin:0 2px;}
+
 /* --- Çeşitli --- */
 .distros{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
 .expander{border:1px solid var(--border);border-radius:12px;background:#fff;margin:8px 0;}

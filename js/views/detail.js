@@ -55,7 +55,22 @@ function _renderDrawer(){
        <button class="btn secondary small" id="sd_next" ${_drawerIdx===_currentBackups.length-1?"disabled":""}>Sonraki ›</button>`
     : "";
   const assess = isBlank(b["Yedek_Assess"]) ? "Kaynakta belirtilmedi" : trNumber(b["Yedek_Assess"],2);
-  document.getElementById("sd_body").innerHTML = `<div class="sd-kv">
+  // Halefiyet Karar Kanıtı (mevcut kanıt sinyalleri; yeni puan üretmez).
+  const ev = successorEvidence(b);
+  const mr = multiRoleCandidacy(b["Yedek_İsim"]);
+  const evSummary = ev.missing.length === 0
+    ? "Bu halef readiness (yedek tipi), performans, 9-Box ve uyum verisiyle değerlendirilebilir görünüyor."
+    : `Bu halef readiness (yedek tipi) ve uyum verisiyle görünür; eksik kanıt: ${ev.missing.join(", ")}.`;
+  const evidenceBlock = `<div class="evidence">
+    <div class="ev-h">Halefiyet Karar Kanıtı</div>
+    <div class="ev-summary">${esc(evSummary)}</div>
+    <div class="ev-line">Kanıt kaynakları: <b>${ev.sources.length ? esc(ev.sources.join(", ")) : "Veri eksik"}</b></div>
+    <div class="ev-line">Son kalibrasyon / değerlendirme tarihi: <b>Kalibrasyon tarihi yok</b></div>
+    <div class="ev-line">Mevcut halefiyet sırası: <b>Kayıt bulunmuyor</b></div>
+    ${mr.roleCount > 1 ? `<div class="ev-line">${badge(mr.roleCount+" kritik rol için aday","warning")}</div>` : ""}
+    <div class="ev-note">Bu özet yalnızca mevcut verileri görünür kılar; yeni puan/öneri üretmez.</div>
+  </div>`;
+  document.getElementById("sd_body").innerHTML = evidenceBlock + `<div class="sd-kv">
     ${_kvRow("Yedek adı", `<b>${esc(disp(b["Yedek_İsim"]))}</b>`)}
     ${_kvRow("Mevcut görev", esc(_dispSrc(b["Yedek_Görev"])))}
     ${_kvRow("Yedek firma", esc(_dispSrc(b["Yedek_Firma"])))}
@@ -210,6 +225,7 @@ function _backupCard(b, idx){
        tabindex="0" aria-label="${esc(disp(b["Yedek_İsim"]))} — hızlı halef kartını aç">
     <div class="bk-head"><b>${esc(disp(b["Yedek_İsim"]))}</b>
       ${badge(ready?"Ready-now (Hazır)":"Hazırlanıyor / değil", ready?"success":"warning")}</div>
+    ${_multiRoleBadge(b["Yedek_İsim"])}
     <div class="bk-sub">${esc(_dispSrc(b["Yedek_Görev"]))} · ${esc(_dispSrc(b["Yedek_Firma"]))} ·
       ${esc(_dispSrc(b["Yedek_Şehir"]))}</div>
     <div class="bk-tags">
@@ -265,6 +281,66 @@ function _calibrationTopics(row, bk){
       bazlı türetilir. Nihai değerlendirme yönetici ve İK kalibrasyonunda yapılır.</div>`;
 }
 
+/* V1.1 — Çoklu kritik rol adaylığı mikro-uyarısı (gerçek ilişkiden; veri yoksa boş). */
+function _multiRoleBadge(isim){
+  const m = multiRoleCandidacy(isim);
+  if(m.roleCount <= 1) return "";
+  const parts = [badge(`${m.roleCount} kritik rol için aday`, "warning")];
+  if(m.readyCount > 1) parts.push(badge(`${m.readyCount} kritik rolde Ready Now`, "danger"));
+  return `<div class="multi-role">${parts.join(" ")}</div>`;
+}
+
+/* V1.1 — "Neden Kritik?" (mevcut F-faktör açıklamaları; boş -> 'Veri eksik'). */
+function _whyCritical(row){
+  const ct = v => { const t = cleanFactorText(v); return (t === BLANK) ? "Veri eksik" : t; };
+  const bosKalma = isBlank(row["Bilgi_Etkisi"]) ? "Veri eksik"
+    : ("Bilgi etkisi: " + disp(row["Bilgi_Etkisi"])
+       + (isBlank(row["Kritik_Bilgi"]) ? "" : " · Kritik bilgi: " + disp(row["Kritik_Bilgi"])));
+  const items = [
+    ["İş etkisi", ct(row["F3: Etki Alanı"])],
+    ["Yerine koyma zorluğu", ct(row["F5: Dolum Zorluğu"])],
+    ["Kritik uzmanlık / kurumsal bilgi", ct(row["F4: Kıdem/ Kurumsal Hafıza Riski"])],
+    ["Boş kalma etkisi", bosKalma],
+  ];
+  return `<div class="panel crit-block"><h4>Neden Kritik?</h4><div class="crit-kv">
+    ${items.map(([l,v])=>`<div><span>${esc(l)}</span><div class="crit-val">${esc(v)}</div></div>`).join("")}
+  </div></div>`;
+}
+
+/* V1.1 — "Bugünkü Risk" (mevcut veriden; desteklenmeyen alanlar dürüst boş durumla). */
+function _todayRisk(row, bk){
+  const ready = positionHasReady(row);
+  const dep = bk.all.length===0 ? "Tanımlı yedek yok"
+    : (bk.all.length===1 ? "Tek tanımlı yedek (bağımlılık)"
+       : (bk.ready.length===1 ? "Tek hazır halef (bağımlılık)" : "Birden fazla tanımlı yedek"));
+  const gaps = positionDataGaps(row);
+  const items = [
+    ["Ready Now halef durumu", ready ? "Hazır halef var" : "Hazır halef yok"],
+    ["Tek kişiye bağımlılık", dep],
+    ["Açık gelişim aksiyonu", "Kayıt bulunmuyor"],
+    ["Eksik / güncel olmayan veri", gaps.length ? gaps.join(", ") : "Belirgin eksik yok"],
+  ];
+  return `<div class="panel crit-block"><h4>Bugünkü Risk</h4><div class="crit-kv">
+    ${items.map(([l,v])=>`<div><span>${esc(l)}</span><div class="crit-val">${esc(v)}</div></div>`).join("")}
+  </div></div>`;
+}
+
+/* V1.1 — Readiness açığı ile mevcut aksiyonların (dürüst) bağlantısı. */
+function _readinessActions(row, st, bk){
+  const gap = (st.label==="Kritik Açık" || st.label==="Hazır Halef Açığı") ? "Var"
+            : (bk.ready.length ? "Yok (hazır halef mevcut)" : "—");
+  return `<div class="panel"><h4>Readiness Açıkları ve Açık Aksiyonlar</h4>
+    <div class="crit-kv">
+      <div><span>Readiness açığı</span><div class="crit-val">${esc(gap)}</div></div>
+      <div><span>Açık aksiyon (sahip · termin · durum)</span>
+        <div class="crit-val">Bağlı aksiyon kaydı bulunmuyor</div></div>
+    </div>
+    <div class="caption">Kaynakta aksiyon sahibi / termin / durum alanı ve doğrulanmış
+      aday↔aksiyon anahtarı bulunmadığından aksiyonlar pozisyona teknik olarak bağlanmaz
+      (Faz 2). Aksiyon Takip sekmesi kaynak-tanımlı önerileri ayrı gösterir.</div>
+  </div>`;
+}
+
 function _renderDetailBody(row){
   if(!row) return emptyState("Gösterilecek pozisyon yok.");
   _closeDrawer();                                  // pozisyon değişince açık drawer'ı kapat
@@ -280,6 +356,12 @@ function _renderDetailBody(row){
   return `
     ${_decisionHeader(row, st, bk)}
 
+    <div class="section-head" style="margin-top:18px"><h3>Neden kritik · bugünkü risk</h3></div>
+    <div class="crit-cols">
+      ${_whyCritical(row)}
+      ${_todayRisk(row, bk)}
+    </div>
+
     <div class="section-head" style="margin-top:18px"><h3>Rol risk profili</h3></div>
     <div class="decision-cols">
       ${_riskModule(row)}
@@ -289,6 +371,9 @@ function _renderDetailBody(row){
     <div class="section-head" style="margin-top:18px"><h3>Tanımlı halefler karşılaştırması</h3></div>
     ${ambiguity}
     ${_backupComparison(bk)}
+
+    <div class="section-head" style="margin-top:18px"><h3>Readiness açıkları ve aksiyonlar</h3></div>
+    ${_readinessActions(row, st, bk)}
 
     <div class="section-head" style="margin-top:18px"><h3>Kalibrasyonda İncelenebilecek Konular</h3></div>
     ${_calibrationTopics(row, bk)}

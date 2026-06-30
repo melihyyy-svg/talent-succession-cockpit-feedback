@@ -139,6 +139,56 @@ function unmappedYedekTipi(){
   return seen;
 }
 
+/* === V1.1: Karar Kanıtı & çoklu-rol (SAF; mevcut ilişkilerden; yeni skor/varsayım YOK) ===
+   Hiçbiri mevcut metrik/lens/mutabakat hesabını değiştirmez; salt-okunur türetimdir. */
+
+/* Bu kişinin (Yedek_İsim) aday olduğu roller — Yedek Verisi'nden, normalize tam eşleşme. */
+function candidateRoleLinks(isim){
+  const key = normalizeValue(isim);
+  if(!key) return [];
+  return DATA.backups.filter(b => normalizeValue(b["Yedek_İsim"]) === key).map(b => ({
+    role: b["Pozisyon"], incumbent: b["Pozisyon_Sahibi"], firma: b["Poz_Firma"],
+    aciliyet: b["Poz_Aciliyet"], ready: isReadyBackup(b),
+  }));
+}
+
+/* Çoklu kritik rol adaylığı (tek kişiye bağımlılık görünürlüğü). Distinct rol = Pozisyon_Sahibi. */
+function multiRoleCandidacy(isim){
+  const links = candidateRoleLinks(isim);
+  const roles = new Set(), readyRoles = new Set();
+  links.forEach(l => {
+    const k = normalizeValue(l.incumbent) || normalizeValue(l.role);
+    if(!k) return;
+    roles.add(k);
+    if(l.ready) readyRoles.add(k);
+  });
+  return { roleCount: roles.size, readyCount: readyRoles.size };
+}
+
+/* Bir halefin (Yedek Verisi kaydı) mevcut kanıt sinyalleri — yalnızca dolu olanlar. */
+function successorEvidence(b){
+  const sources = [];
+  if(!isBlank(b["Yedek_Perf"])) sources.push("performans");
+  if(!isBlank(b["Yedek_9Box"])) sources.push("9-Box");
+  if(!isBlank(b["Yedek_Assess"])) sources.push("assessment");
+  if(!isBlank(b["Yedek_Tipi"])) sources.push("readiness (yedek tipi)");
+  if(!isBlank(b["Coğrafi_Uyum"]) || !isBlank(b["Fonksiyonel_Uyum"])) sources.push("uyum");
+  const missing = [];
+  if(isBlank(b["Yedek_Perf"])) missing.push("performans");
+  if(isBlank(b["Yedek_9Box"])) missing.push("9-Box");
+  if(isBlank(b["Yedek_Assess"])) missing.push("assessment");
+  return { ready: isReadyBackup(b), sources, missing };
+}
+
+/* Pozisyonda eksik/boş kritik veri alanları (Bugünkü Risk için; dürüst boş durum). */
+function positionDataGaps(row){
+  const gaps = [];
+  if(isBlank(row["9Box"])) gaps.push("9-Box");
+  if(isBlank(row["Assessment"])) gaps.push("Assessment");
+  if(isBlank(row["Perf"])) gaps.push("Performans");
+  return gaps;
+}
+
 function calculateSummary(rows){
   const total = rows.length;
   const counts = {};
