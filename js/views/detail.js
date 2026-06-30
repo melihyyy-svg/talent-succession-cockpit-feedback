@@ -198,9 +198,11 @@ function _renderDetailGroupList(host, ctx, onPick){
   if(!items.length){
     body = emptyState("Bu lens koşulunu sağlayan pozisyon yok; aşağıdaki seçimle grupta gezinebilirsiniz.");
   } else {
+    // Tüm kart tıklanabilir (büyük hedef + a11y); "Detayı aç" yalnızca görsel ipucu.
     body = `<div class="grouplist">` + items.map(({i,p}) => {
       const ready = positionHasReady(p), has = hasBackup(p);
-      return `<div class="gl-card" data-card="${i}">
+      return `<div class="gl-card" data-card="${i}" role="button" tabindex="0"
+          aria-label="${esc(disp(p["Pozisyon"]))} — ${esc(disp(p["İsim"]))} detayını aç">
         <div class="gl-main"><b>${esc(disp(p["Pozisyon"]))}</b>
           <span>${esc(disp(p["İsim"]))} · ${esc(disp(p["Firma"]))} · ${esc(disp(p["Şehir"]))}</span></div>
         <div class="gl-meta">
@@ -208,7 +210,7 @@ function _renderDetailGroupList(host, ctx, onPick){
           <span class="gl-risk">Risk ${esc(disp(p["Toplam_Risk"]))}</span>
           ${badge(has?"Yedek var":"Yedek yok", has?"success":"danger")}
           ${badge(ready?"Hazır halef var":"Hazır halef yok", ready?"success":(has?"warning":"danger"))}
-          <button class="btn secondary small" data-gpos="${i}">Detayı aç →</button>
+          <span class="gl-open">Detayı aç →</span>
         </div></div>`;
     }).join("") + `</div>`;
   }
@@ -216,12 +218,23 @@ function _renderDetailGroupList(host, ctx, onPick){
       <h3>Bu heatmap seçimi içinde incelenebilecek pozisyonlar</h3></div>
     <div class="caption">${esc(header)}</div>${body}`;
 
-  host.querySelectorAll("[data-gpos]").forEach(btn => btn.onclick = () => {
-    const idx = Number(btn.getAttribute("data-gpos"));
-    host.querySelectorAll(".gl-card").forEach(c =>
-      c.classList.toggle("active", Number(c.getAttribute("data-card")) === idx));
+  // Event delegation: kart üzerinde herhangi bir yere tıklama/Enter/Space seçer.
+  const list = host.querySelector(".grouplist");
+  function _pick(card){
+    if(!card) return;
+    const idx = Number(card.getAttribute("data-card"));
+    list.querySelectorAll(".gl-card").forEach(c => c.classList.toggle("active", c === card));
     onPick(idx);
-  });
+  }
+  if(list){
+    list.addEventListener("click", e => _pick(e.target.closest(".gl-card")));
+    list.addEventListener("keydown", e => {
+      if(e.key === "Enter" || e.key === " "){
+        const card = e.target.closest(".gl-card");
+        if(card){ e.preventDefault(); _pick(card); }
+      }
+    });
+  }
 }
 
 function renderDetail(el){

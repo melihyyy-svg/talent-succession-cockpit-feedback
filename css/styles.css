@@ -293,8 +293,12 @@ table.heatmap th.hm-rowhead{text-align:left;background:var(--bg-alt);border-radi
 .grouplist{display:flex;flex-direction:column;gap:8px;margin:8px 0 6px;}
 .gl-card{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
   background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;
-  box-shadow:var(--shadow);}
-.gl-card.active{outline:2px solid var(--brand-2);outline-offset:1px;}
+  box-shadow:var(--shadow);cursor:pointer;transition:box-shadow .12s,transform .12s;}
+.gl-card:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(20,24,60,.10),var(--shadow);}
+.gl-card:focus-visible{outline:2px solid var(--brand-2);outline-offset:1px;}
+.gl-card.active{outline:2px solid var(--brand-2);outline-offset:1px;
+  box-shadow:0 0 0 3px rgba(91,63,168,.12),var(--shadow);}
+.gl-open{color:var(--brand-2);font-weight:700;font-size:.8rem;white-space:nowrap;}
 .gl-main{display:flex;flex-direction:column;gap:2px;min-width:210px;flex:1 1 210px;}
 .gl-main b{font-size:.95rem;}
 .gl-main span{color:var(--text-2);font-size:.8rem;}
