@@ -88,7 +88,27 @@ Hazır Şimdi adaylarının adları küçük rozet olarak (mevcut sıralama mant
 Tanımlı yedek yoksa: `Tanımlı yedek bulunmuyor.` Mevcut halef kartı / Hızlı Halef Kartı
 drawer drill-down davranışı korunur; şerit flex-wrap ile mobilde taşmaz.
 
-Yeni saf hesap `js/calc.js` içinde (`benchStrength`); testler: `python tools/test_v11.py` (21/21).
+Yeni saf hesap `js/calc.js` içinde (`benchStrength`); testler: `python tools/test_v11.py`.
+
+## V1.2-D – Halef Karşılaştırması
+
+**Pozisyon Karar Dosyası**'nda, aynı kritik role aday **birden fazla** halef varsa, adayları
+mevcut kaynak verisiyle yan yana gösteren bir **"Halef Karşılaştırması"** tablosu eklendi
+(Halef Havuzu Gücü şeridinden sonra, "Neden Kritik?"ten önce). **Yeni tab/skor/AI/öneri yok**;
+"en iyi / önerilen aday" veya toplam puan üretilmez.
+
+- Yalnızca **pozisyon→yedek ilişkisi** (`lookupBackups`) ve mevcut yedek alanları kullanılır;
+  adaylar **kaynak sırasında** kalır (Ready Now'a göre otomatik sıralama yok).
+- Karşılaştırma yalnızca **≥2 aday** varsa render edilir; tek aday/aday yoksa hiç gösterilmez
+  (mevcut Bench Strength + boş durum yeterli).
+- Gösterilen alanlar: Aday · Hazırlık/Yedek Tipi · Hazır Şimdi (Ready Now allowlist'i, tam
+  eşleşme — değişmedi) · Performans · 9-Box · Assessment · Coğrafi uyum · Fonksiyonel uyum ·
+  Eksik kanıt (yalnızca Performans/9-Box/Assessment boşsa). Eksik alanlar `Veri eksik`.
+- Tablo `.table-scroll` ile sarılır; mobilde global yatay taşma yaratmaz. Halef kartı / drawer /
+  breadcrumb / drill-down davranışları değişmez.
+
+Yeni saf hesap `js/calc.js` içinde (`successorComparisonRows`);
+testler: `python tools/test_v11.py` (26/26).
 
 ## Veri üretimi
 

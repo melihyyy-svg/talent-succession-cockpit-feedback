@@ -164,6 +164,37 @@ check("benchStrength: readyNames sayısı ready sayısına eşit (boş Yedek_İs
               if is_ready(b) and not blank(b.get("Yedek_İsim")))
           == bench(p.get("İsim"))[1] for p in P))
 
+
+# V1.2-D — successorComparisonRows: pozisyon→yedek ilişkisi, mevcut kaynak sırası korunur
+def comparison_rows(name):  # js: successorComparisonRows
+    out = []
+    for b in backups_of(name):
+        missing = []
+        if blank(b.get("Yedek_Perf")):
+            missing.append("Performans")
+        if blank(b.get("Yedek_9Box")):
+            missing.append("9-Box")
+        if blank(b.get("Yedek_Assess")):
+            missing.append("Assessment")
+        out.append({"name": b.get("Yedek_İsim"), "ready": is_ready(b), "missing": missing})
+    return out
+
+
+_p_multi = next((p for p in P if len(backups_of(p.get("İsim"))) >= 2), None)
+check("successorComparisonRows: karşılaştırma için >=2 adaylı pozisyon var", _p_multi is not None)
+if _p_multi is not None:
+    _nm = _p_multi.get("İsim")
+    _src = backups_of(_nm)
+    _cmp = comparison_rows(_nm)
+    check("successorComparisonRows: uzunluk == bağlı yedek sayısı", len(_cmp) == len(_src))
+    check("successorComparisonRows: kaynak sırası korunur",
+          [r["name"] for r in _cmp] == [b.get("Yedek_İsim") for b in _src])
+    check("successorComparisonRows: ready bayrağı is_ready ile birebir",
+          all(r["ready"] == is_ready(b) for r, b in zip(_cmp, _src)))
+    check("successorComparisonRows: missing Performans <-> Yedek_Perf boş",
+          all(("Performans" in r["missing"]) == blank(b.get("Yedek_Perf"))
+              for r, b in zip(_cmp, _src)))
+
 # Mevcut veri sabitleri (mutabakat dolaylı koruması)
 check("Veri sabit: 177 pozisyon", len(P) == 177)
 check("Veri sabit: 470 yedek", len(B) == 470)

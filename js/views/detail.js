@@ -163,6 +163,29 @@ function _benchStrip(bk){
   </div>`;
 }
 
+/* V1.2-D — Halef Karşılaştırması (aynı role >=2 aday varsa; mevcut kaynak sırası korunur).
+   Karar desteğidir: "en iyi/önerilen aday" veya toplam puan üretilmez. Hesap calc.js'tedir. */
+function _successorComparison(row){
+  const rows = successorComparisonRows(row["İsim"]);
+  if(rows.length < 2) return "";                   // tek aday/aday yok -> hiç render etme
+  const de = v => isBlank(v) ? "Veri eksik" : disp(v);   // eksik alan -> "Veri eksik"
+  const cols = [
+    {key:"name",label:"Aday",cls:"wrap-cell",rawFmt:v=>`<b>${esc(disp(v))}</b>`},
+    {key:"tipi",label:"Hazırlık / Yedek Tipi",cls:"wrap-cell",fmt:v=>de(v)},
+    {key:"ready",label:"Hazır Şimdi",rawFmt:v=>badge(v?"Var":"—", v?"success":"neutral")},
+    {key:"perf",label:"Performans",fmt:v=>de(v)},
+    {key:"ninebox",label:"9-Box",rawFmt:v=>badge(isBlank(v)?"Veri eksik":disp(v), nineboxTone(v))},
+    {key:"assess",label:"Assessment",fmt:v=>isBlank(v)?"Veri eksik":trNumber(v,2)},
+    {key:"geo",label:"Coğrafi uyum",fmt:v=>de(v)},
+    {key:"func",label:"Fonksiyonel uyum",fmt:v=>de(v)},
+    {key:"missing",label:"Eksik kanıt",cls:"wrap-cell",rawFmt:v=>v.length?esc(v.join(", ")):"—"},
+  ];
+  return `<div class="section-head" style="margin-top:18px"><h3>Halef Karşılaştırması</h3></div>
+    <div class="caption">Aynı role aday halefler mevcut kaynak verisiyle yan yana; kaynak sırası
+      korunur, "en iyi / önerilen aday" veya toplam puan üretilmez. Eksik alanlar "Veri eksik".</div>
+    <div class="succ-cmp">${buildTable(cols, rows)}</div>`;
+}
+
 /* 1) Karar başlığı (Position Decision Header). */
 function _decisionHeader(row, st, bk){
   const aci = disp(row["Aciliyet_Final"]);
@@ -377,6 +400,8 @@ function _renderDetailBody(row){
 
   return `
     ${_decisionHeader(row, st, bk)}
+
+    ${_successorComparison(row)}
 
     <div class="section-head" style="margin-top:18px"><h3>Neden kritik · bugünkü risk</h3></div>
     <div class="crit-cols">

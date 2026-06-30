@@ -237,6 +237,30 @@ function benchStrength(isim){
   return { total: all.length, ready: ready.length, other: other.length, readyNames };
 }
 
+/* === V1.2-D: Halef Karşılaştırması — SAF; pozisyon→yedek ilişkisi + mevcut yedek alanları ===
+   Adaylar mevcut KAYNAK SIRASINDA döner (lookupBackups); Ready Now'a göre otomatik sıralama
+   YAPILMAZ. Skor/öneri/en-iyi-aday üretilmez; render katmanı yalnızca biçimlendirir.
+   "missing" yalnızca Performans / 9-Box / Assessment boşluklarını listeler. */
+function successorComparisonRows(positionName){
+  return lookupBackups(positionName).map(b => {
+    const missing = [];
+    if(isBlank(b["Yedek_Perf"])) missing.push("Performans");
+    if(isBlank(b["Yedek_9Box"])) missing.push("9-Box");
+    if(isBlank(b["Yedek_Assess"])) missing.push("Assessment");
+    return {
+      name: b["Yedek_İsim"],
+      tipi: b["Yedek_Tipi"],
+      ready: isReadyBackup(b),                      // Ready Now allowlist (tam eşleşme)
+      perf: b["Yedek_Perf"],
+      ninebox: b["Yedek_9Box"],
+      assess: b["Yedek_Assess"],
+      geo: b["Coğrafi_Uyum"],
+      func: b["Fonksiyonel_Uyum"],
+      missing,
+    };
+  });
+}
+
 function calculateSummary(rows){
   const total = rows.length;
   const counts = {};

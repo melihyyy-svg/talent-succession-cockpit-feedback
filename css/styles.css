@@ -497,3 +497,9 @@ td.wrap-cell .badge{margin:2px 4px 2px 0;}
 .bench-names{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;}
 .bench-chip{font-size:.8rem;padding:3px 9px;border-radius:999px;background:#fff;
   border:1px solid var(--border);color:var(--text);}
+
+/* === V1.2-D: Halef Karşılaştırması === */
+/* Tablo zaten .table-scroll ile sarılır (mobil yatay taşma container içinde kalır). */
+.succ-cmp{margin:6px 0 4px;}
+.succ-cmp table.data td{vertical-align:top;}
+.succ-cmp table.data td.wrap-cell{min-width:130px;}
