@@ -115,10 +115,13 @@ table.data tbody tr:hover{background:#f7f8fe;}
 table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 
 /* Talent Pool Explorer tablosu — kompakt satırlar (yalnızca #talent_table'a scoped;
-   Halef Karşılaştırması / Risk Kuyruğu / diğer tablolar etkilenmez). Yalnızca dikey
-   yoğunluk azaltılır; yatay padding sabit, wrap-cell uzun metinde doğal büyür. */
+   Halef Karşılaştırması / Risk Kuyruğu / diğer tablolar etkilenmez).
+   Kök belirleyici: td kendi line-height'ını set etmiyordu, body'den miras alınan
+   line-height:1.45 + 8px padding satırı şişiriyordu. Burada yalnızca DİKEY yoğunluk
+   düşürülür (line-height + dikey padding); yatay padding sabit (yatay taşma yok),
+   vertical-align:top ve wrap-cell'in white-space:normal'ı korunur → uzun metin doğal büyür. */
 #talent_table table.data th,
-#talent_table table.data td{padding-top:5px;padding-bottom:5px;line-height:1.25;}
+#talent_table table.data td{padding:5px 11px;line-height:1.2;}
 
 /* --- Filtre / form kontrolleri --- */
 .controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:10px 0;}
