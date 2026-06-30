@@ -168,6 +168,85 @@ select[multiple]{min-height:104px;}
 .nb-cell.nb-empty{opacity:.62;background:var(--bg-alt);}
 .nb-cell.nb-empty .ct{color:var(--text-2);}
 
+/* ===================================================================
+   Executive Decision View — premium karar hiyerarşisi (yalnızca sunum)
+   =================================================================== */
+.exec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
+  flex-wrap:wrap;padding:6px 2px 18px;margin-bottom:8px;border-bottom:1px solid var(--border);}
+.exec-eyebrow{color:var(--brand-2);font-weight:800;letter-spacing:.14em;font-size:.74rem;}
+.exec-title{font-size:1.5rem;font-weight:800;margin:6px 0 4px;letter-spacing:-.02em;max-width:34ch;}
+.exec-lede{color:var(--text-2);font-size:.95rem;margin:0;max-width:64ch;}
+.exec-meta{display:flex;gap:8px;flex-wrap:wrap;}
+.meta-chip{background:var(--bg-alt);border:1px solid var(--border);border-radius:999px;
+  padding:5px 12px;font-size:.76rem;font-weight:600;color:var(--text-2);white-space:nowrap;}
+.meta-chip.dq-ok{color:var(--success);border-color:#bfe6df;background:var(--success-bg);}
+.meta-chip.dq-warn{color:var(--warning);border-color:#f0dcb8;background:var(--warning-bg);}
+.meta-chip.dq-err{color:var(--danger);border-color:#f3c9c9;background:var(--danger-bg);}
+
+.exec-section{margin:30px 0;}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin-bottom:14px;}
+.section-head h3{margin:0;font-size:1.12rem;font-weight:750;}
+.section-head h3.muted-head{color:var(--text-2);font-weight:700;font-size:1rem;}
+.section-hint{color:var(--text-2);font-size:.8rem;}
+.exec-section h4{margin:0 0 8px;font-size:.92rem;color:var(--text-2);font-weight:700;}
+
+/* Tier 1 — kritik sinyal kartları */
+.signal-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
+.signal-card{position:relative;text-align:left;font:inherit;cursor:pointer;width:100%;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 20px 16px;box-shadow:var(--shadow);overflow:hidden;
+  transition:box-shadow .14s,transform .14s;}
+.signal-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--sig,#5A6072);}
+.signal-card:hover,.signal-card:focus-visible{transform:translateY(-2px);
+  box-shadow:0 6px 18px rgba(20,24,60,.12),var(--shadow);outline:none;}
+.signal-card .sig-num{font-size:2.6rem;font-weight:800;line-height:1;color:var(--sig,#1F2440);}
+.signal-card .sig-label{font-weight:700;font-size:.96rem;margin:4px 0 8px;color:var(--text);}
+.signal-card .sig-action{color:var(--text-2);font-size:.82rem;display:flex;
+  justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--border);
+  padding-top:8px;}
+.signal-card .sig-go{color:var(--sig,#5B3FA8);font-weight:700;white-space:nowrap;}
+.signal-card.t-danger{--sig:var(--danger);background:linear-gradient(180deg,var(--danger-bg),#fff 60%);}
+.signal-card.t-warning{--sig:var(--warning);background:linear-gradient(180deg,var(--warning-bg),#fff 60%);}
+.signal-card.t-info{--sig:var(--info);}
+.exec-drillpanel{margin-top:16px;}
+
+/* Tier 2 — kapsam vs hazır-halef */
+.cov-panel{padding:20px 22px;}
+.cov-compare{display:grid;gap:18px;}
+.cov-row{display:grid;gap:6px;}
+.cov-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;}
+.cov-name{font-weight:700;font-size:.95rem;}
+.cov-val{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;}
+.cov-val.ok{color:var(--success);} .cov-val.warn{color:var(--warning);}
+.cov-bar{height:12px;border-radius:8px;background:var(--bg-alt);overflow:hidden;}
+.cov-fill{height:100%;border-radius:8px;}
+.cov-fill.strong{background:var(--success);}
+.cov-fill.weak{background:var(--warning);}
+.cov-meaning{color:var(--text-2);font-size:.84rem;}
+.cov-gap{margin-top:2px;padding:12px 14px;background:var(--warning-bg);border:1px solid #f0dcb8;
+  border-radius:12px;font-size:.9rem;color:#7a4a08;}
+.cov-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:.84rem;}
+.stat-link{background:none;border:none;font:inherit;cursor:pointer;color:var(--text);
+  padding:0;display:inline-flex;gap:6px;align-items:center;}
+.stat-link b{color:var(--warning);}
+.stat-link span{color:var(--brand-2);font-weight:800;}
+.stat-link:hover{color:var(--brand-2);}
+
+/* Tier 3 — kritik pozisyon listesi hücreleri */
+.cl-pos{display:flex;flex-direction:column;gap:2px;}
+.cl-pos span{color:var(--text-2);font-size:.78rem;}
+.cl-sub{color:var(--text-2);font-size:.74rem;margin-top:3px;}
+
+/* Bağlam bölümü — sakin */
+.exec-context{margin-top:34px;padding-top:6px;border-top:1px solid var(--border);}
+
+@media(max-width:640px){
+  .exec-title{font-size:1.28rem;}
+  .signal-card .sig-num{font-size:2.2rem;}
+}
+
 /* --- Çeşitli --- */
 .distros{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
 .expander{border:1px solid var(--border);border-radius:12px;background:#fff;margin:8px 0;}
