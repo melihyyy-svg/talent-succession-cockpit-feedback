@@ -74,6 +74,34 @@ def position_data_gaps(row):  # js etiketleriyle birebir: 9-Box / Assessment / P
     return gaps
 
 
+# --- V1.2-A: Açık Halefiyet Riskleri (positionRiskFlags) oracle ---
+HIGH = {"ACİL", "YÜKSEK"}
+
+
+def has_backup(p):  # js: hasBackup — Yedek_Var normalize == "evet"
+    return nv(p.get("Yedek_Var")) == nv("evet")
+
+
+def backups_of(isim):  # js: lookupBackups — Yedek.Pozisyon_Sahibi == Pozisyon.İsim
+    k = nv(isim)
+    return [b for b in B if nv(b.get("Pozisyon_Sahibi")) == k] if k else []
+
+
+def pos_ready(p):  # js: positionHasReady
+    return any(is_ready(b) for b in backups_of(p.get("İsim")))
+
+
+def risk_flags(p):  # js: positionRiskFlags (sabit sıra: gap, nobackup, single)
+    f = []
+    if str(p.get("Aciliyet_Final", "")).strip() in HIGH and not pos_ready(p):
+        f.append("gap")
+    if not has_backup(p):
+        f.append("nobackup")
+    if len(backups_of(p.get("İsim"))) == 1:
+        f.append("single")
+    return f
+
+
 # --- Testler ---
 tests = []
 def check(name, cond):
@@ -99,6 +127,22 @@ check("successorEvidence: tam veri -> missing boş", b_full is not None
 p_gap = next((p for p in P if blank(p.get("9Box"))), None)
 check("positionDataGaps: boş 9-Box -> gaps içinde", p_gap is not None
       and "9-Box" in position_data_gaps(p_gap))
+
+# V1.2-A — positionRiskFlags dağılımı (mevcut yüklemlerle birebir; recon ile tutarlı)
+_flags_all = [risk_flags(p) for p in P]
+check("positionRiskFlags: gap (Kritik Ready-now açığı) == 43",
+      sum("gap" in f for f in _flags_all) == 43)
+check("positionRiskFlags: nobackup (Tanımlı yedek yok) == 16",
+      sum("nobackup" in f for f in _flags_all) == 16)
+check("positionRiskFlags: tek yedek bağımlılığı (single) == 53",
+      sum("single" in f for f in _flags_all) == 53)
+check("positionRiskFlags: kuyruk (>=1 bayrak) == 87",
+      sum(1 for f in _flags_all if f) == 87)
+check("positionRiskFlags: bayraklar yalnızca sabit kümede",
+      all(set(f) <= {"gap", "nobackup", "single"} for f in _flags_all))
+_p_nb = next((p for p in P if not has_backup(p)), None)
+check("positionRiskFlags: yedeksiz pozisyon -> nobackup bayrağı",
+      _p_nb is not None and "nobackup" in risk_flags(_p_nb))
 
 # Mevcut veri sabitleri (mutabakat dolaylı koruması)
 check("Veri sabit: 177 pozisyon", len(P) == 177)

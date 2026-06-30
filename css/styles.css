@@ -481,3 +481,10 @@ ul.topics li{margin:.3rem 0;}
 .bar-row .bt{flex:1;background:var(--bg-alt);border-radius:6px;height:16px;overflow:hidden;}
 .bar-row .bf{height:100%;border-radius:6px;background:var(--brand-2);}
 .bar-row .bv{flex:0 0 46px;text-align:right;color:var(--text-2);font-variant-numeric:tabular-nums;}
+
+/* === V1.2-A: Açık Halefiyet Riskleri (Karar Kuyruğu) === */
+.rq-controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  margin:12px 0;align-items:end;}
+.rq-counts{margin:4px 0 14px;}
+/* Bayrak rozetleri çok-bayraklı satırda sarmalanır (taşma yok). */
+td.wrap-cell .badge{margin:2px 4px 2px 0;}

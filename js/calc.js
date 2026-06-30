@@ -189,6 +189,43 @@ function positionDataGaps(row){
   return gaps;
 }
 
+/* === V1.2-A: Açık Halefiyet Riskleri (SAF; mevcut yüklemlerden türetim; yeni skor YOK) ===
+   Her bayrak ZATEN var olan bir karar kuralıdır (heatmap lens'leri / detail durum mantığı).
+   Yeni metrik/skor/sıralama/öneri üretmez; mevcut metrik/lens/mutabakatı DEĞİŞTİRMEZ. */
+const SUCCESSION_RISK_FLAGS = {
+  gap: {
+    label:"Kritik Ready-now açığı", tone:"danger",
+    desc:"ACİL veya YÜKSEK aciliyet ve hazır (Ready-now) halef yok.",
+    test:p => C.HIGH_RISK.includes(String(p[C.URGENCY]).trim()) && !positionHasReady(p),
+  },
+  nobackup: {
+    label:"Tanımlı yedek yok", tone:"warning",
+    desc:"Pozisyona bağlı hiç tanımlı yedek bulunmuyor.",
+    test:p => !hasBackup(p),
+  },
+  single: {
+    label:"Tek yedek bağımlılığı", tone:"warning",
+    desc:"Yalnızca tek tanımlı yedek var (tek kişiye bağımlılık).",
+    test:p => lookupBackups(p["İsim"]).length === 1,
+  },
+};
+const SUCCESSION_RISK_ORDER = ["gap","nobackup","single"];
+
+/* Bir pozisyonun taşıdığı açık halefiyet riski bayrakları (sabit sıra). */
+function positionRiskFlags(row){
+  return SUCCESSION_RISK_ORDER.filter(k => SUCCESSION_RISK_FLAGS[k].test(row));
+}
+
+/* En az bir açık riski olan pozisyonlar: [{p, idx, flags}] — mevcut positions sırasını korur. */
+function openSuccessionRiskList(){
+  const out = [];
+  DATA.positions.forEach((p, idx) => {
+    const flags = positionRiskFlags(p);
+    if(flags.length) out.push({p, idx, flags});
+  });
+  return out;
+}
+
 function calculateSummary(rows){
   const total = rows.length;
   const counts = {};

@@ -124,6 +124,19 @@ function renderExec(el){
   C.URGENCY_ORDER.forEach(u => urgDist[u] = s.urgency_counts[u]||0);
   Object.keys(s.urgency_counts).forEach(k => { if(!(k in urgDist)) urgDist[k]=s.urgency_counts[k]; });
 
+  // V1.2-A — Açık Halefiyet Riskleri (Karar Kuyruğu): mevcut yüklemlerden türeyen,
+  // en az bir açık risk bayrağı taşıyan pozisyonlar. Yeni skor/sıralama yok.
+  const _rqAll = openSuccessionRiskList();                 // [{p, idx, flags}]
+  const _rqFirmaOpts = [...new Set(_rqAll.map(o => o.p["Firma"]).filter(v=>!isBlank(v))
+    .map(v=>String(v).trim()))].sort((a,b)=>a.localeCompare(b,"tr"));
+  const _RQ_SEV_ORDER = ["Başkan / GM", "Direktör / GMY", "Müdür"];
+  const _rqSeviyeOpts = _RQ_SEV_ORDER.filter(s2 => _rqAll.some(o => String(o.p["Seviye"]).trim()===s2))
+    .concat([...new Set(_rqAll.map(o=>String(o.p["Seviye"]).trim()))]
+      .filter(s2 => s2 && !_RQ_SEV_ORDER.includes(s2)).sort((a,b)=>a.localeCompare(b,"tr")));
+  const _rqTypeOpts = SUCCESSION_RISK_ORDER.map(k => SUCCESSION_RISK_FLAGS[k].label);
+  const _rqLabelToKey = {};
+  SUCCESSION_RISK_ORDER.forEach(k => _rqLabelToKey[SUCCESSION_RISK_FLAGS[k].label] = k);
+
   el.innerHTML = `
     <header class="exec-head">
       <div class="exec-head-main">
@@ -175,6 +188,25 @@ function renderExec(el){
         ? `<div class="caption">Tümü için yukarıdaki <b>Yüksek Risk</b> kartından inebilirsiniz.</div>`:""}
     </section>
 
+    <!-- TIER 4 — Açık Halefiyet Riskleri (Karar Kuyruğu) -->
+    <section class="exec-section">
+      <div class="section-head"><h3>4 · Açık halefiyet riskleri — karar kuyruğu</h3>
+        <span class="section-hint">Açık riskli pozisyonları filtreleyin → pozisyon detayına inin</span></div>
+      ${note("info", `Mevcut karar kurallarından türeyen açık riskleri taşıyan pozisyonların tek,
+        salt-okunur ve filtrelenebilir kuyruğu. Bayraklar mevcut yüklemlerle aynıdır
+        (Kritik Ready-now açığı · Tanımlı yedek yok · Tek yedek bağımlılığı); yeni
+        skor/öneri/sıralama üretilmez. Nihai değerlendirme yönetici ve İK kalibrasyonunda yapılır.`)}
+      <div class="rq-controls" id="rq_controls">
+        ${multiselectField("rq_type","Risk türü", _rqTypeOpts)}
+        ${multiselectField("rq_firma","Firma", _rqFirmaOpts)}
+        ${multiselectField("rq_seviye","Seviye", _rqSeviyeOpts)}
+        <div class="field"><label>&nbsp;</label>
+          <button class="btn secondary small" id="rq_reset">Filtreleri temizle</button></div>
+      </div>
+      <div id="rq_counts"></div>
+      <div id="rq_table"></div>
+    </section>
+
     <!-- Bağlam (sakin, ikincil) -->
     <section class="exec-section exec-context">
       <div class="section-head"><h3 class="muted-head">Bağlam</h3></div>
@@ -200,7 +232,57 @@ function renderExec(el){
     card.onclick = go;
     card.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } };
   });
-  // Kritik liste "Detayda aç" deep-link
+  // Kritik liste "Detayda aç" deep-link (kuyruk tablosu henüz boş; ayrı bağlanır)
   el.querySelectorAll(".exec-section [data-pos]").forEach(btn =>
     btn.onclick = () => openInDetail(Number(btn.getAttribute("data-pos"))));
+
+  // --- TIER 4: Açık Halefiyet Riskleri (Karar Kuyruğu) güncelleme + bağlama ---
+  const _rqCountsEl = document.getElementById("rq_counts");
+  const _rqTableEl = document.getElementById("rq_table");
+  const _rqCols = [
+    {key:"_pos",label:"Pozisyon",cls:"wrap-cell",rawFmt:(v,r)=>
+      `<div class="cl-pos"><b>${esc(disp(r.p["Pozisyon"]))}</b><span>${esc(disp(r.p["İsim"]))} · ${esc(disp(r.p["Firma"]))} · ${esc(disp(r.p["Şehir"]))}</span></div>`},
+    {key:"_why",label:"Neden riskli?",rawFmt:(v,r)=>
+      `${badge(disp(r.p["Aciliyet_Final"]))}<div class="cl-sub">Risk ${esc(disp(r.p["Toplam_Risk"]))}</div>`},
+    {key:"_flags",label:"Açık riskler",cls:"wrap-cell",rawFmt:(v,r)=>
+      r.flags.map(f=>badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)).join(" ")},
+    {key:"_bk",label:"Tanımlı yedek",rawFmt:(v,r)=>String(lookupBackups(r.p["İsim"]).length)},
+    {key:"_act",label:"",rawFmt:(v,r)=>`<button class="btn secondary small" data-pos="${r.idx}">Detayda aç →</button>`},
+  ];
+  function _rqUpdate(){
+    const selTypes = getMultiselect("rq_type").map(l => _rqLabelToKey[l]).filter(Boolean);
+    const selF = getMultiselect("rq_firma");
+    const selS = getMultiselect("rq_seviye");
+    const items = _rqAll.filter(o =>
+      (!selF.length || selF.includes(String(o.p["Firma"]).trim())) &&
+      (!selS.length || selS.includes(String(o.p["Seviye"]).trim())) &&
+      (!selTypes.length || o.flags.some(f => selTypes.includes(f))));
+    items.sort((a,b)=>{
+      const ra=urgencyRank(a.p[C.URGENCY]), rb=urgencyRank(b.p[C.URGENCY]);
+      if(ra!==rb) return ra-rb;
+      const xa=num(a.p[C.RISK_TOTAL]), xb=num(b.p[C.RISK_TOTAL]);
+      return (Number.isNaN(xb)?-Infinity:xb)-(Number.isNaN(xa)?-Infinity:xa);
+    });
+    // Canlı sayım şeridi (filtrelenen kuyruktaki bayrak kırılımı; bir pozisyon >1 bayrak taşıyabilir)
+    const fc = {};
+    SUCCESSION_RISK_ORDER.forEach(k => fc[k] = items.filter(o=>o.flags.includes(k)).length);
+    _rqCountsEl.innerHTML = `<div class="metric-grid rq-counts">
+      ${metricCard("Kuyruktaki pozisyon", items.length, "en az bir açık risk")}
+      ${SUCCESSION_RISK_ORDER.map(k =>
+        metricCard(SUCCESSION_RISK_FLAGS[k].label, fc[k], "")).join("")}
+    </div>`;
+    _rqTableEl.innerHTML = items.length ? buildTable(_rqCols, items)
+      : emptyState("Seçili filtrelerle açık risk taşıyan pozisyon yok.");
+    _rqTableEl.querySelectorAll("[data-pos]").forEach(btn =>
+      btn.onclick = () => openInDetail(Number(btn.getAttribute("data-pos"))));
+  }
+  document.querySelectorAll("#rq_controls select").forEach(sel => sel.onchange = _rqUpdate);
+  const _rqReset = document.getElementById("rq_reset");
+  if(_rqReset) _rqReset.onclick = () => {
+    ["rq_type","rq_firma","rq_seviye"].forEach(id => {
+      const s2 = document.getElementById(id); if(s2)[...s2.options].forEach(o=>o.selected=false);
+    });
+    _rqUpdate();
+  };
+  _rqUpdate();
 }

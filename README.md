@@ -50,7 +50,27 @@ boş durumla gösterilir: `Kayıt bulunmuyor`, `Veri eksik`, `Kalibrasyon tarihi
   olmadığından `Kayıt bulunmuyor`.
 
 Yeni saf hesaplar `js/calc.js` içinde (`candidateRoleLinks`, `multiRoleCandidacy`,
-`successorEvidence`, `positionDataGaps`); testler: `python tools/test_v11.py` (11/11).
+`successorEvidence`, `positionDataGaps`); testler: `python tools/test_v11.py`.
+
+## V1.2-A – Açık Halefiyet Riskleri (Karar Kuyruğu)
+
+**Yönetici Karar Özeti** ekranına, **yeni tab/metrik/skor/AI olmadan**, mevcut karar
+kurallarından türeyen açık riskli pozisyonların tek, salt-okunur ve filtrelenebilir bir
+**karar kuyruğu** eklendi. Hiçbir mevcut hesap, lens toplamı veya mutabakat (9/9 · 6/6 ·
+7/7) değişmedi; sıralama mevcut aciliyet→risk düzeniyle aynıdır.
+
+Risk bayrakları mevcut yüklemlerle birebir aynıdır (yeni eşik/skor yok):
+
+- **Kritik Ready-now açığı** — ACİL/YÜKSEK aciliyet ve hazır halef yok (`HIGH_RISK ∧ !positionHasReady`, 43 pozisyon).
+- **Tanımlı yedek yok** — pozisyona bağlı hiç yedek yok (`!hasBackup`, 16 pozisyon).
+- **Tek yedek bağımlılığı** — yalnızca tek tanımlı yedek (`lookupBackups(İsim).length === 1`, 53 pozisyon).
+
+En az bir bayrak taşıyan 87 pozisyon kuyruğa girer; Risk türü / Firma / Seviye ile
+filtrelenir ve mevcut **Detayda aç** drill-down'u ile Pozisyon Karar Dosyası'na inilir.
+Filtre sonucu boşsa dürüst boş durum gösterilir.
+
+Yeni saf hesaplar `js/calc.js` içinde (`positionRiskFlags`, `openSuccessionRiskList`);
+testler: `python tools/test_v11.py` (17/17).
 
 ## Veri üretimi
 
