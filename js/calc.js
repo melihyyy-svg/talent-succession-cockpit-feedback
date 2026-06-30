@@ -226,6 +226,17 @@ function openSuccessionRiskList(){
   return out;
 }
 
+/* === V1.2-B: Halef Havuzu Gücü (Bench Strength) — SAF; mevcut ilişki + Ready Now allowlist ===
+   Zaman-bazlı readiness (1y/2y) ÜRETİLMEZ; yalnızca mevcut Yedek_Tipi tam eşleşmesinden
+   Hazır Şimdi / diğer aday / toplam ayrımı. Mevcut sıralama/metrik/mutabakat DEĞİŞMEZ. */
+function benchStrength(isim){
+  const all = lookupBackups(isim);                 // mevcut pozisyon→yedek ilişkisi
+  const ready = all.filter(isReadyBackup);         // Ready Now allowlist (tam eşleşme)
+  const other = all.filter(b => !isReadyBackup(b));
+  const readyNames = ready.map(b => b["Yedek_İsim"]).filter(v => !isBlank(v));
+  return { total: all.length, ready: ready.length, other: other.length, readyNames };
+}
+
 function calculateSummary(rows){
   const total = rows.length;
   const counts = {};

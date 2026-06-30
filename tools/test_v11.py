@@ -144,6 +144,26 @@ _p_nb = next((p for p in P if not has_backup(p)), None)
 check("positionRiskFlags: yedeksiz pozisyon -> nobackup bayrağı",
       _p_nb is not None and "nobackup" in risk_flags(_p_nb))
 
+
+# V1.2-B — benchStrength (Halef Havuzu Gücü): mevcut ilişki + Ready Now allowlist
+def bench(isim):  # js: benchStrength -> (total, ready, other)
+    all_b = backups_of(isim)
+    ready = sum(1 for b in all_b if is_ready(b))
+    return len(all_b), ready, len(all_b) - ready
+
+
+_bench = [bench(p.get("İsim")) for p in P]
+check("benchStrength: ready + other == total (her pozisyon)",
+      all(r + o == t for t, r, o in _bench))
+check("benchStrength: ready her zaman 0..total aralığında",
+      all(0 <= r <= t for t, r, o in _bench))
+check("benchStrength: Ready Now'lu pozisyon == 36 (positionHasReady ile tutarlı)",
+      sum(1 for t, r, o in _bench if r >= 1) == 36)
+check("benchStrength: readyNames sayısı ready sayısına eşit (boş Yedek_İsim yok)",
+      all(sum(1 for b in backups_of(p.get("İsim"))
+              if is_ready(b) and not blank(b.get("Yedek_İsim")))
+          == bench(p.get("İsim"))[1] for p in P))
+
 # Mevcut veri sabitleri (mutabakat dolaylı koruması)
 check("Veri sabit: 177 pozisyon", len(P) == 177)
 check("Veri sabit: 470 yedek", len(B) == 470)

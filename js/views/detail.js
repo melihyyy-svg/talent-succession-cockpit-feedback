@@ -142,6 +142,27 @@ function _positionBackups(isim){
   return {all, ready, prep};
 }
 
+/* V1.2-B — Halef Havuzu Gücü şeridi (mevcut ilişki + Ready Now; zaman-bazlı kategori üretmez).
+   bk = _positionBackups: all/ready/prep zaten Ready Now allowlist'iyle ayrılmıştır. */
+function _benchStrip(bk){
+  if(!bk.all.length){
+    return `<div class="bench-strip empty">
+      <span class="bench-h">Halef Havuzu Gücü</span>
+      <span class="bench-empty">Tanımlı yedek bulunmuyor.</span></div>`;
+  }
+  const chips = bk.ready.length
+    ? `<div class="bench-names">${bk.ready.map(b =>
+        `<span class="bench-chip">${esc(disp(b["Yedek_İsim"]))}</span>`).join("")}</div>`
+    : "";
+  return `<div class="bench-strip">
+    <span class="bench-h">Halef Havuzu Gücü</span>
+    <span class="bench-stat ${bk.ready.length?"ready":""}"><b>${bk.ready.length}</b> Hazır Şimdi</span>
+    <span class="bench-stat"><b>${bk.prep.length}</b> Diğer Aday</span>
+    <span class="bench-stat"><b>${bk.all.length}</b> Toplam Aday</span>
+    ${chips}
+  </div>`;
+}
+
 /* 1) Karar başlığı (Position Decision Header). */
 function _decisionHeader(row, st, bk){
   const aci = disp(row["Aciliyet_Final"]);
@@ -166,6 +187,7 @@ function _decisionHeader(row, st, bk){
     <div class="pdh-row">${badge(aci)}
       <span class="pdh-risk">Toplam Risk <b>${esc(disp(row["Toplam_Risk"]))}</b></span></div>
     <div class="pdh-summary">${summary}</div>
+    ${_benchStrip(bk)}
   </div>`;
 }
 

@@ -70,7 +70,22 @@ filtrelenir ve mevcut **Detayda aç** drill-down'u ile Pozisyon Karar Dosyası'n
 Filtre sonucu boşsa dürüst boş durum gösterilir.
 
 Yeni saf hesaplar `js/calc.js` içinde (`positionRiskFlags`, `openSuccessionRiskList`);
-testler: `python tools/test_v11.py` (17/17).
+testler: `python tools/test_v11.py`.
+
+## V1.2-B – Halef Havuzu Gücü Şeridi
+
+**Pozisyon Karar Dosyası** üst bilgisine, **yeni tab/metrik/skor/AI olmadan**, ilgili kritik
+rolün halef havuzu gücünü tek bakışta gösteren kompakt bir **"Halef Havuzu Gücü"** şeridi
+eklendi. Zaman-bazlı readiness kategorileri (1 yıl / 2+ yıl) kaynakta bulunmadığından
+**üretilmez/tahmin edilmez**; yalnızca mevcut `Yedek_Tipi` ve Ready Now allowlist'i
+(`YETENEK HAZIR` / `DOĞAL + HAZIR`, tam eşleşme — değişmedi) kullanılır.
+
+Şerit dürüst yapıyı gösterir: **Hazır Şimdi** (X) · **Diğer Aday** (Y) · **Toplam Aday** (Z),
+Hazır Şimdi adaylarının adları küçük rozet olarak (mevcut sıralama mantığı değişmeden).
+Tanımlı yedek yoksa: `Tanımlı yedek bulunmuyor.` Mevcut halef kartı / Hızlı Halef Kartı
+drawer drill-down davranışı korunur; şerit flex-wrap ile mobilde taşmaz.
+
+Yeni saf hesap `js/calc.js` içinde (`benchStrength`); testler: `python tools/test_v11.py` (21/21).
 
 ## Veri üretimi
 

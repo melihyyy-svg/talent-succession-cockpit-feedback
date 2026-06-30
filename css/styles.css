@@ -488,3 +488,16 @@ ul.topics li{margin:.3rem 0;}
 .rq-counts{margin:4px 0 14px;}
 /* Bayrak rozetleri çok-bayraklı satırda sarmalanır (taşma yok). */
 td.wrap-cell .badge{margin:2px 4px 2px 0;}
+
+/* === V1.2-B: Halef Havuzu Gücü şeridi === */
+.bench-strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:12px;
+  padding:10px 14px;background:var(--bg-alt);border:1px solid var(--border);border-radius:12px;}
+.bench-strip .bench-h{font-size:.74rem;font-weight:700;color:var(--text-2);
+  text-transform:uppercase;letter-spacing:.04em;}
+.bench-stat{font-size:.9rem;color:var(--text);white-space:nowrap;}
+.bench-stat b{font-size:1.05rem;font-variant-numeric:tabular-nums;}
+.bench-stat.ready b{color:var(--success,#0F9D8C);}
+.bench-empty{font-size:.9rem;color:var(--text-2);}
+.bench-names{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;}
+.bench-chip{font-size:.8rem;padding:3px 9px;border-radius:999px;background:#fff;
+  border:1px solid var(--border);color:var(--text);}
