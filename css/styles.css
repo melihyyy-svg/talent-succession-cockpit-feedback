@@ -124,7 +124,7 @@ select[multiple]{min-height:104px;}
 @media(max-width:760px){.cascade{grid-template-columns:1fr;}}
 
 /* --- 9-Box matris --- */
-#talent_matrix{overflow-x:auto;}
+#talent_matrix,#kalib_matrix{overflow-x:auto;}
 .ninebox{display:grid;grid-template-columns:96px 1fr 1fr 1fr;gap:8px;margin:8px 0;}
 /* Dar ekranda 9-Box kendi içinde yatay kaydırılır; sayfayı taşırmaz. */
 @media(max-width:640px){ .ninebox{min-width:520px;} }
@@ -304,6 +304,40 @@ table.heatmap th.hm-rowhead{text-align:left;background:var(--bg-alt);border-radi
   .gl-card{align-items:flex-start;}
   .gl-meta{width:100%;}
 }
+
+/* ===================================================================
+   Talent — mod seçici + Kalibrasyon Görünümü
+   =================================================================== */
+.mode-switch{display:inline-flex;gap:4px;background:var(--bg-alt);border:1px solid var(--border);
+  border-radius:12px;padding:4px;margin:4px 0 14px;}
+.mode-switch button{border:none;background:transparent;border-radius:9px;padding:8px 16px;
+  font:inherit;font-weight:600;font-size:.9rem;color:var(--text-2);cursor:pointer;}
+.mode-switch button.active{background:#fff;color:var(--brand-2);box-shadow:var(--shadow);}
+
+.kalib-groups{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin:8px 0;}
+.kalib-card{text-align:left;font:inherit;cursor:pointer;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:3px;transition:box-shadow .12s,transform .12s;}
+.kalib-card:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(20,24,60,.10),var(--shadow);}
+.kalib-card.active{outline:2px solid var(--brand-2);outline-offset:1px;}
+.kc-count{font-size:1.9rem;font-weight:800;line-height:1;color:var(--brand-2);}
+.kc-label{font-weight:700;font-size:.95rem;}
+.kc-desc{color:var(--text-2);font-size:.78rem;line-height:1.3;}
+.kc-go{color:var(--brand-2);font-weight:700;font-size:.8rem;margin-top:4px;}
+
+.kalib-active{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+  padding:8px 14px;font-size:.88rem;margin:6px 0;}
+
+.revlist{display:flex;flex-direction:column;gap:8px;margin:8px 0;}
+.rev-card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:10px 14px;box-shadow:var(--shadow);}
+.rev-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.rev-head b{font-size:.95rem;}
+.rev-reason{font-size:.78rem;}
+.rev-sub{color:var(--text-2);font-size:.82rem;margin:3px 0 6px;}
+.rev-tags{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--text-2);}
+.rev-tag b{color:var(--text);}
+@media(max-width:560px){ .rev-tags{gap:8px;} }
 
 /* --- Çeşitli --- */
 .distros{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
