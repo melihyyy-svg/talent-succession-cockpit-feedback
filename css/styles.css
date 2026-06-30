@@ -114,6 +114,12 @@ table.data thead th{background:var(--bg-alt);color:var(--text-2);font-weight:700
 table.data tbody tr:hover{background:#f7f8fe;}
 table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 
+/* Talent Pool Explorer tablosu — kompakt satırlar (yalnızca #talent_table'a scoped;
+   Halef Karşılaştırması / Risk Kuyruğu / diğer tablolar etkilenmez). Yalnızca dikey
+   yoğunluk azaltılır; yatay padding sabit, wrap-cell uzun metinde doğal büyür. */
+#talent_table table.data th,
+#talent_table table.data td{padding-top:5px;padding-bottom:5px;line-height:1.25;}
+
 /* --- Filtre / form kontrolleri --- */
 .controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:10px 0;}
 .field label{display:block;font-size:.8rem;color:var(--text-2);font-weight:600;margin-bottom:4px;}
