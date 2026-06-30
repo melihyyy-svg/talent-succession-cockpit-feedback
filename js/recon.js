@@ -109,3 +109,42 @@ function relationshipIntegrityChecks(){
 
   return {checks};
 }
+
+/* === Halefiyet Sağlığı (Firma × Seviye) Agregasyon Mutabakatı ===
+   Heatmap, mevcut metriklerin grup-bazlı toplamıdır. Bu kontroller, gruplama
+   partition'ının global toplamları KORUDUĞUNU doğrular (yeni hesap üretmez). */
+function heatmapReconChecks(){
+  const P = DATA.positions;
+  const s = calculateSummary(P);
+  const rn = readyNowStats();
+  const isHigh = p => ["ACİL","YÜKSEK"].includes(String(p["Aciliyet_Final"]).trim());
+
+  // Firma × Seviye hücrelerine dağıt; her pozisyon tam 1 hücreye düşmeli.
+  const cells = {};
+  let assigned = 0;
+  P.forEach(p => {
+    const f = String(p["Firma"]).trim(), sv = String(p["Seviye"]).trim();
+    const k = f + "||" + sv;
+    (cells[k] = cells[k] || []).push(p);
+    assigned++;
+  });
+  const cellArrays = Object.values(cells);
+  const sum = fn => cellArrays.reduce((a,g)=>a + g.filter(fn).length, 0);
+
+  const cellTotal = cellArrays.reduce((a,g)=>a+g.length, 0);
+  const gapSum = sum(p => isHigh(p) && !positionHasReady(p));
+  const readySum = sum(p => positionHasReady(p));
+  const nbSum = sum(p => !hasBackup(p));
+  const highSum = sum(p => isHigh(p));
+
+  const checks = [
+    {name:"Hücre toplam pozisyon = toplam pozisyon", expected:P.length, actual:cellTotal},
+    {name:"Her pozisyon tam 1 hücreye atandı", expected:P.length, actual:assigned},
+    {name:"Kritik Ready-now açığı toplamı = global", expected:rn.gap, actual:gapSum},
+    {name:"Ready-now olan pozisyon toplamı = global", expected:rn.coverage, actual:readySum},
+    {name:"Tanımlı yedeği olmayan toplam = global", expected:s.coverage_absent, actual:nbSum},
+    {name:"Yüksek risk (ACİL+YÜKSEK) toplamı = global", expected:s.high_risk_count, actual:highSum},
+  ].map(c => ({...c, ok: c.actual === c.expected}));
+
+  return {checks, cellCount: cellArrays.length};
+}

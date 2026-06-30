@@ -74,14 +74,25 @@ function _renderDetailBody(row){
 }
 
 function renderDetail(el){
+  // Heatmap'ten gelindiyse bağlam bandı (hangi Firma/Seviye/lens kapsamından).
+  const ctx = window.__detailContext;
+  window.__detailContext = null;
+  const ctxBanner = ctx
+    ? note("info", `Geldiğiniz bağlam — <b>Halefiyet Sağlığı</b>: Firma
+        <b>${esc(disp(ctx.firma))}</b> · Seviye <b>${esc(disp(ctx.seviye))}</b> ·
+        Lens <b>${esc(disp(ctx.lens))}</b>. Aşağıda bu gruptan öncelikli pozisyon
+        önyüklendi; Firma/Ünvan seçimini değiştirerek aynı grupta gezinebilirsiniz.`)
+    : "";
+
   el.innerHTML = `
     <h2>Pozisyon &amp; Yedek Detayı</h2>
+    ${ctxBanner}
     <div class="caption">🔎 Pozisyon seç: Firma → Ünvan → Mevcut Pozisyon Sahibi</div>
     <div id="detail_cascade"></div>
     <div id="detail_body"></div>
   `;
   const body = document.getElementById("detail_body");
-  // KPI drill-down "Detayda aç" ile gelen önyükleme indeksi (varsa).
+  // KPI / heatmap drill-down ile gelen önyükleme indeksi (varsa).
   let initial = (typeof window.__pendingDetail === "number") ? window.__pendingDetail : null;
   window.__pendingDetail = null;
   renderCascade(document.getElementById("detail_cascade"), DATA.positions, "detail",

@@ -116,6 +116,25 @@ function renderQuality(el){
         kayıtları gözden geçirin (otomatik düzeltme YAPILMAZ).`)
     : note("ok", `Ready-now ilişki anahtarı bütünlüğü: tüm kontroller tutarlı
         (${integ.checks.length}/${integ.checks.length}).`);
+  // --- Halefiyet Sağlığı (Firma × Seviye) agregasyon mutabakatı ---
+  const heat = heatmapReconChecks();
+  const heatFail = heat.checks.filter(c => !c.ok).length;
+  const heatRows = heat.checks.map(c => ({
+    "Kontrol": c.name, "Beklenen": c.expected, "Gerçekleşen": c.actual,
+    "Sonuç": c.ok ? ["✅ Tutarlı","success"] : ["❌ Sapma","danger"],
+  }));
+  const heatTable = buildTable([
+    {key:"Kontrol",label:"Kontrol",cls:"wrap-cell"},
+    {key:"Beklenen",label:"Beklenen"},{key:"Gerçekleşen",label:"Gerçekleşen"},
+    {key:"Sonuç",label:"Sonuç",rawFmt:v=>badge(v[0],v[1])},
+  ], heatRows);
+  const heatBlock = `<h3>Halefiyet Sağlığı Agregasyon Mutabakatı</h3>
+    ${heatFail>0
+      ? note("err", `<b>${heatFail} sapma</b> — Firma×Seviye gruplaması global toplamlarla tutarsız.`)
+      : note("ok", `Firma×Seviye (${heat.cellCount} grup) agregasyonu global toplamlarla tutarlı
+          (${heat.checks.length}/${heat.checks.length}).`)}
+    ${heatTable}`;
+
   const integBlock = `<h3>Ready-now İlişki Anahtarı Bütünlüğü</h3>
     ${note("info", `Ready-now hesapları <code>Pozisyon_Sahibi → İsim</code> isim-anahtarına
       dayanır (kaynakta benzersiz Sicil No yoktur). Aşağıdaki kontroller bu anahtarı <b>aktif</b>
@@ -135,6 +154,8 @@ function renderQuality(el){
       : note("err","Kritik yapı/başlık sorunları var; aşağıdaki ERROR satırlarına bakın.")}
 
     ${reconBlock}
+
+    ${heatBlock}
 
     ${integBlock}
 

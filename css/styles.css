@@ -247,6 +247,48 @@ select[multiple]{min-height:104px;}
   .signal-card .sig-num{font-size:2.2rem;}
 }
 
+/* ===================================================================
+   Halefiyet Sağlığı Isı Haritası
+   =================================================================== */
+.heat-controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  margin:14px 0;align-items:start;}
+.heat-controls .chk{display:flex;gap:8px;align-items:center;font-size:.84rem;color:var(--text);font-weight:500;}
+.heat-controls .chk input{width:auto;}
+
+.heat-legend{margin:6px 0 12px;}
+.legend-row{font-size:.9rem;margin-bottom:6px;}
+.legend-keys{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.lk{border-radius:999px;padding:3px 10px;font-size:.74rem;font-weight:700;border:1px solid transparent;}
+.lk.t-danger{color:var(--danger);background:var(--danger-bg);}
+.lk.t-warning{color:var(--warning);background:var(--warning-bg);}
+.lk.t-success{color:var(--success);background:var(--success-bg);}
+.lk.t-none{color:var(--text-2);background:var(--bg-alt);}
+
+table.heatmap{border-collapse:separate;border-spacing:6px;width:100%;min-width:560px;}
+table.heatmap thead th{background:transparent;color:var(--text-2);font-size:.82rem;font-weight:700;
+  text-align:center;padding:4px 8px;white-space:nowrap;}
+table.heatmap th.hm-corner{text-align:left;color:var(--text-2);font-size:.78rem;}
+table.heatmap th.hm-rowhead{text-align:left;background:var(--bg-alt);border-radius:10px;padding:8px 12px;
+  font-size:.85rem;font-weight:700;color:var(--text);white-space:nowrap;min-width:120px;}
+.heat-cell{padding:0;border-radius:12px;vertical-align:stretch;}
+.heat-cell.t-danger{background:var(--danger-bg);}
+.heat-cell.t-warning{background:var(--warning-bg);}
+.heat-cell.t-success{background:var(--success-bg);}
+.heat-cell.t-none{background:var(--bg-alt);}
+.hc-btn{width:100%;height:100%;min-height:86px;border:1px solid var(--border);border-radius:12px;
+  background:transparent;cursor:pointer;font:inherit;text-align:left;padding:10px 12px;
+  display:flex;flex-direction:column;gap:2px;transition:box-shadow .12s,transform .12s;}
+.hc-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow);}
+.heat-cell.t-danger .hc-main{color:var(--danger);}
+.heat-cell.t-warning .hc-main{color:var(--warning);}
+.heat-cell.t-success .hc-main{color:var(--success);}
+.hc-main{font-size:1.5rem;font-weight:800;line-height:1;}
+.hc-unit{font-size:.74rem;font-weight:600;color:var(--text-2);}
+.hc-ratio{font-size:1rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+.hc-total{font-size:.72rem;color:var(--text-2);}
+.hc-empty{min-height:86px;display:flex;align-items:center;justify-content:center;
+  color:var(--text-2);font-size:.8rem;padding:10px;}
+
 /* --- Çeşitli --- */
 .distros{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
 .expander{border:1px solid var(--border);border-radius:12px;background:#fff;margin:8px 0;}

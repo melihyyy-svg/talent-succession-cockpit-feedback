@@ -7,6 +7,7 @@ const FEEDBACK_REPO = "melihyyy-svg/talent-succession-cockpit-feedback";
 
 const TABS = [
   {id:"exec",     label:"Yönetici Karar Özeti", render:renderExec},
+  {id:"heatmap",  label:"Halefiyet Sağlığı", render:renderHeatmap},
   {id:"detail",   label:"Pozisyon & Yedek Detayı", render:renderDetail},
   {id:"talent",   label:"Talent Pool & 9-Box Explorer", render:renderTalent},
   {id:"discovery",label:"Aday Keşfi", render:renderDiscovery},
@@ -56,6 +57,14 @@ function activate(id){
 /* KPI drill-down → belirli pozisyonu Pozisyon & Yedek Detayı'nda aç. */
 function openInDetail(positionIndex){
   window.__pendingDetail = positionIndex;
+  window.__detailContext = null;
+  activate("detail");
+}
+
+/* Heatmap drill-down → temsil pozisyonu + geldiğimiz Firma/Seviye/lens bağlamı. */
+function openInDetailContext(ctx){
+  window.__pendingDetail = ctx.positionIndex;
+  window.__detailContext = ctx;   // {firma, seviye, lens, positionIndex}
   activate("detail");
 }
 
