@@ -133,6 +133,17 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 #talent_table .rationale-more>summary::-webkit-details-marker{display:none;}
 #talent_table .rationale-full{margin-top:4px;font-size:.82rem;color:var(--text-2);white-space:normal;}
 
+/* Aday Keşfi tablosu — aynı kompakt Gerekçe önizleme deseni, yalnızca #discovery_table'a
+   scoped (global table.data kuralı değişmez; diğer tablolar etkilenmez). */
+#discovery_table table.data td.rationale-cell{white-space:normal;min-width:200px;max-width:300px;vertical-align:top;}
+#discovery_table .rationale-preview{display:-webkit-box;-webkit-box-orient:vertical;
+  -webkit-line-clamp:2;line-clamp:2;overflow:hidden;}
+#discovery_table .rationale-more{margin-top:2px;}
+#discovery_table .rationale-more>summary{cursor:pointer;color:var(--brand-2);font-size:.8rem;
+  list-style:none;display:inline-block;}
+#discovery_table .rationale-more>summary::-webkit-details-marker{display:none;}
+#discovery_table .rationale-full{margin-top:4px;font-size:.82rem;color:var(--text-2);white-space:normal;}
+
 /* --- Filtre / form kontrolleri --- */
 .controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:10px 0;}
 .field label{display:block;font-size:.8rem;color:var(--text-2);font-weight:600;margin-bottom:4px;}

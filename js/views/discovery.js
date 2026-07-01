@@ -5,7 +5,10 @@
 function _discoveryColumns(){
   const base = C.DISCOVERY.map(([key,label]) => {
     if(key in C.TALENT_NUMERIC) return {key,label,fmt:v=>trNumber(v, C.TALENT_NUMERIC[key])};
-    if(key==="Gerekçe") return {key,label,cls:"wrap-cell",fmt:v=>disp(v)};
+    // Gerekçe tek uzun-metin sütunu (wrap-cell -> satır yüksekliğini şişiren gerçek neden).
+    // Explorer'daki mevcut kompakt önizleme deseni yeniden kullanılır (_rationaleCell,
+    // js/views/talent.js — script sırası: talent.js önce yüklenir, global fonksiyon).
+    if(key==="Gerekçe") return {key,label,cls:"rationale-cell",rawFmt:v=>_rationaleCell(v)};
     return {key,label,fmt:v=>disp(v)};
   });
   base.push({key:"Firma Eşleşmesi",label:"Firma Eşleşmesi",
