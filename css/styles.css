@@ -152,11 +152,15 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 /* FINAL dashboard — grid-template-areas ile kilitli yerleşim (mobil sıralama kontrolü).
    Masaüstü: sol 330-360 / orta esnek (en büyük) / sağ 280-310, 16px aralık. */
 .tp-dash{display:grid;gap:16px;align-items:start;
-  grid-template-columns:minmax(330px,360px) minmax(0,1fr) minmax(280px,310px);
+  grid-template-columns:minmax(330px,360px) minmax(600px,1fr) minmax(280px,310px);
   grid-template-areas:"nine score flow" "risks equity flow";}
 .tp-nav{grid-area:nine;} .tp-score{grid-area:score;} .tp-equity{grid-area:equity;}
-.tp-risks{grid-area:risks;} .tp-flow{grid-area:flow;}
-@media(max-width:1200px){ .tp-dash{grid-template-columns:1fr 1fr;
+.tp-risks{grid-area:risks;}
+/* Yönetim Akışı sağ kolonda İKİ dashboard satırına yayılır (align-self:stretch). */
+.tp-flow{grid-area:flow;align-self:stretch;}
+/* 3 kolonun min toplamı (330+600+280+2*16) ~1242px; taşmayı önlemek için 3 kolon yalnızca
+   yeterli genişlikte, aksi halde 2 kolon. */
+@media(max-width:1320px){ .tp-dash{grid-template-columns:1fr 1fr;
   grid-template-areas:"nine score" "risks equity" "flow flow";} }
 @media(max-width:760px){ .tp-dash{grid-template-columns:1fr;
   grid-template-areas:"nine" "score" "equity" "risks" "flow";} }
