@@ -144,12 +144,15 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 #discovery_table .rationale-more>summary::-webkit-details-marker{display:none;}
 #discovery_table .rationale-full{margin-top:4px;font-size:.82rem;color:var(--text-2);white-space:normal;}
 
-/* === Talent Pool & 9-Box Explorer — 3 panelli karar çalışma alanı (Workday referanslı
-   bilgi mimarisi; marka/logo/nav kopyalanmadı, mevcut tasarım dili korunur) ===
-   Sol: 9-Box Navigator · Orta: Explorer (en geniş) · Sağ: Talent Review Özeti.
-   #talent_matrix zaten overflow-x:auto (global taşma yok, gerekirse panel içi kaydırma). */
-.tp-workspace{display:grid;grid-template-columns:300px 1fr 300px;gap:16px;align-items:start;}
-@media(max-width:980px){ .tp-workspace{grid-template-columns:1fr;} }
+/* === Talent Pool & 9-Box Explorer — kompakt üst özet + tam genişlik Explorer ===
+   (Workday bilgi hiyerarşisi referans alınır: önce özet/9-Box, sonra detaylı Explorer;
+   marka/logo/nav kopyalanmadı, mevcut tasarım dili korunur). Üstte 2 kolonlu
+   Talent Pool Overview (sol 9-Box Navigator · sağ Talent Review Özeti) — tablo genişliğinde
+   DEĞİL, kısa/karar odaklı. Altında tam genişlik Talent Pool Explorer.
+   #talent_matrix / .table-scroll zaten overflow-x:auto (global taşma yok). */
+.tp-overview{display:grid;grid-template-columns:minmax(300px,360px) minmax(0,1fr);
+  gap:16px;align-items:start;}
+@media(max-width:760px){ .tp-overview{grid-template-columns:1fr;} }
 .tp-panel{margin:0;}
 .tp-panel-title{margin:0 0 8px;font-size:1rem;}
 .tp-nav .ninebox{min-width:260px;}
@@ -158,11 +161,15 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
   padding:8px 10px;background:var(--bg-alt);border-radius:10px;font-size:.86rem;}
 .tp-stat b{font-size:1.05rem;font-variant-numeric:tabular-nums;}
 .tp-filters-head{font-weight:700;font-size:.9rem;margin:14px 0 4px;}
+.tp-filters-grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));}
 .tp-context{margin:2px 0 10px;font-size:.9rem;}
 .tp-context-line b{color:var(--text);}
 .tp-context-mean{font-size:.82rem;margin-top:2px;}
+/* Talent Review Özeti artık sabit sağ rail değil; üst overview'da yatay/kompakt blok. */
+.tp-review{}
 .tp-review-scope,.tp-review-count{display:flex;justify-content:space-between;align-items:baseline;
   gap:8px;font-size:.86rem;margin-bottom:6px;}
+.tp-review-dists{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}
 .tp-review-block{margin-top:14px;}
 .tp-review-block h4{margin:0 0 6px;font-size:.86rem;color:var(--text-2);}
 

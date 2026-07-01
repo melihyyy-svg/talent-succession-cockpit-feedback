@@ -64,11 +64,12 @@ function _renderNinebox(mount, matrix){
 
 let _talentUpdate = () => {};
 
-/* ===================== MOD: EXPLORER (mevcut) — 3 panelli karar çalışma alanı ===================== */
-/* Sol: 9-Box Navigator (giriş noktası) · Orta: Talent Pool Explorer (ana çalışma alanı) ·
-   Sağ: Talent Review Özeti (mevcut veriden bağlam). Hesap/filtre/hücre-seçim mantığı
-   DEĞİŞMEDİ (aynı applyTalentFilters/nineboxMatrix/_renderNinebox); yalnızca yerleşim
-   ve mevcut fonksiyonların (distribution) render katmanında yeniden kullanımı. */
+/* ===================== MOD: EXPLORER (mevcut) — kompakt üst özet + tam genişlik Explorer =====================
+   Üstte 2 kolonlu Talent Pool Overview (sol 9-Box Navigator · sağ Talent Review Özeti — kısa,
+   karar odaklı, tablo genişliğinde DEĞİL). Altında tam genişlik Talent Pool Explorer.
+   Hesap/filtre/hücre-seçim mantığı DEĞİŞMEDİ (aynı applyTalentFilters/nineboxMatrix/
+   _renderNinebox/distribution); yalnızca yerleşim. Tekrar eden "ilk 15 hızlı önizleme"
+   kaldırıldı — ana Explorer tablosu zaten aynı seçili kapsamı (scoped) gösterir. */
 function _renderExplorerMode(host){
   const all = DATA.talent;
   const options = talentFilterOptions(all);
@@ -76,7 +77,7 @@ function _renderExplorerMode(host){
     multiselectField("tf_"+col, C.TALENT_FILTER_LABELS[col]||col, options[col]||[])).join("");
 
   host.innerHTML = `
-    <div class="tp-workspace">
+    <div class="tp-overview">
       <aside class="panel tp-panel tp-nav">
         <h3 class="tp-panel-title">9-Box Performans × Potansiyel</h3>
         ${note("info", `Bu 9-Box görünümü <b>tüm çalışan popülasyonunu değil</b>, yalnızca
@@ -88,26 +89,24 @@ function _renderExplorerMode(host){
         <div id="talent_nav_summary" class="tp-nav-summary"></div>
       </aside>
 
-      <section class="panel tp-panel tp-main">
-        <h3 class="tp-panel-title">Talent Pool Explorer</h3>
-        <div id="talent_context" class="tp-context"></div>
-        <div id="talent_drill"></div>
-        <div class="tp-filters-head">Filtreler</div>
-        <div class="controls" id="talent_filters">${filterFields}</div>
-        <div id="talent_table"></div>
-      </section>
-
       <aside class="panel tp-panel tp-review">
         <h3 class="tp-panel-title">Talent Review Özeti</h3>
         <div id="talent_review_summary"></div>
       </aside>
     </div>
+
+    <section class="panel tp-panel tp-main">
+      <h3 class="tp-panel-title">Talent Pool Explorer</h3>
+      <div id="talent_context" class="tp-context"></div>
+      <div class="tp-filters-head">Filtreler</div>
+      <div class="controls tp-filters-grid" id="talent_filters">${filterFields}</div>
+      <div id="talent_table"></div>
+    </section>
   `;
 
   const matrixEl = document.getElementById("talent_matrix");
   const navSummaryEl = document.getElementById("talent_nav_summary");
   const contextEl = document.getElementById("talent_context");
-  const drillEl = document.getElementById("talent_drill");
   const tableEl = document.getElementById("talent_table");
   const reviewEl = document.getElementById("talent_review_summary");
   const cols = _talentExplorerColumns();
@@ -128,11 +127,11 @@ function _renderExplorerMode(host){
       <div class="tp-stat"><span>Toplam kişi</span><b>${all.length}</b></div>
       <div class="tp-stat"><span>9-Box eksik</span><b>${boxMissing}</b></div>`;
 
-    // Orta panel — bağlam bandı + (varsa) hızlı önizleme (mevcut davranış: ilk 15).
+    // Explorer bağlam bandı (nötr veya seçili grup) — ayrı "ilk 15 önizleme" YOK; ana tablo
+    // zaten aynı seçili kapsamı (scoped) gösterdiği için tekrar edilmez (bkz. üstteki not).
     if(cell === "Tümü"){
       contextEl.innerHTML = `<div class="tp-context-line muted">Tüm Talent Pool kayıtları
         gösteriliyor. Bir 9-Box hücresine tıklayarak inceleyin.</div>`;
-      drillEl.innerHTML = "";
     } else {
       const meaning = DATA.meta.ninebox.meaning[cell] || "";
       const cellInfo = (matrix.rows.flat().find(c=>c.label===cell)) || {};
@@ -140,23 +139,9 @@ function _renderExplorerMode(host){
         <span class="muted">— Performans: ${esc(cellInfo.performance||"—")} ·
         Potansiyel: ${esc(cellInfo.potential||"—")}</span></div>
         ${meaning ? `<div class="tp-context-mean muted">${esc(meaning)}</div>` : ""}`;
-      if(!scoped.length){
-        drillEl.innerHTML = emptyState("Bu kategoride mevcut filtrelerle kişi yok — filtreleri gözden geçirin.");
-      } else {
-        const dcols = [
-          {key:"Ad-Soyad",label:"Ad Soyad",fmt:v=>disp(v)},
-          {key:"Ana Firma",label:"Firma",fmt:v=>disp(v)},
-          {key:"Unvan",label:"Ünvan",fmt:v=>disp(v)},
-          {key:"Seviye",label:"Seviye",fmt:v=>disp(v)},
-          {key:"9-Box",label:"9-Box",fmt:v=>disp(v)},
-        ];
-        let body = buildTable(dcols, scoped.slice(0,15));
-        if(scoped.length>15) body += `<div class="caption">İlk 15 gösteriliyor (toplam ${scoped.length} kişi).</div>`;
-        drillEl.innerHTML = body;
-      }
     }
 
-    // Orta panel — mevcut Explorer tablosu (Filtrelenen Kişi kartı + Gerekçe önizleme korunur).
+    // Explorer tablosu (Filtrelenen Kişi kartı + Gerekçe önizleme korunur).
     let tbl = `<div class="metric-grid"><div class="metric"><div class="m-label">Filtrelenen Kişi</div>
       <div class="m-value">${scoped.length}</div></div></div>`;
     if(!scoped.length){
@@ -179,8 +164,10 @@ function _renderExplorerMode(host){
       reviewEl.innerHTML = `
         <div class="tp-review-scope"><span>Kapsam</span><b>${esc(scopeLabel)}</b></div>
         <div class="tp-review-count"><span>Kişi sayısı</span><b>${scoped.length}</b></div>
-        <div class="tp-review-block"><h4>Talent Kararı Dağılımı</h4>${renderBars(kararDist)}</div>
-        <div class="tp-review-block"><h4>Succession Dağılımı</h4>${renderBars(succDist)}</div>
+        <div class="tp-review-dists">
+          <div class="tp-review-block"><h4>Talent Kararı Dağılımı</h4>${renderBars(kararDist)}</div>
+          <div class="tp-review-block"><h4>Succession Dağılımı</h4>${renderBars(succDist)}</div>
+        </div>
         <div class="tp-review-block muted">
           <div>Kararı veren / kalibrasyon grubu: <b>Kayıt bulunmuyor</b></div>
           <div>Sonraki gözden geçirme tarihi: <b>Kalibrasyon tarihi yok</b></div>
