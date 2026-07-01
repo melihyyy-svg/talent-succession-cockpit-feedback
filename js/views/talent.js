@@ -9,12 +9,43 @@ let _talentMode = "explorer";
 /* ===================== ORTAK 9-BOX (Explorer) ===================== */
 const _talentState = { cell: "Tümü" };
 
+/* Explorer VARSAYILAN kolonları — okunabilir/kompakt tarama seti (yatay scroll yok).
+   İkincil alanlar (Kıdem, Perf Ort, Assessment, Assessment Tipi, Potansiyel, Performans,
+   Önerilen Aksiyon, Gerekçe) tablodan çıkarıldı ama SİLİNMEDİ: her satırın "Detay"
+   açılımında görünür (mevcut inline <details> mekanizması). Filtreler/veri modeli değişmez. */
 function _talentExplorerColumns(){
-  return C.TALENT_EXPLORER.map(([key,label]) => {
-    if(key in C.TALENT_NUMERIC) return {key,label,fmt:v=>trNumber(v, C.TALENT_NUMERIC[key])};
-    if(key==="Gerekçe") return {key,label,cls:"rationale-cell",rawFmt:v=>_rationaleCell(v)};
-    return {key,label,fmt:v=>disp(v)};
-  });
+  return [
+    {key:"Sicil No",     label:"Sicil No",      fmt:v=>disp(v)},
+    {key:"Ad-Soyad",     label:"Ad Soyad",      cls:"wrap-cell", fmt:v=>disp(v)},
+    {key:"Seviye",       label:"Seviye",        fmt:v=>disp(v)},
+    {key:"Ana Firma",    label:"Firma",         fmt:v=>disp(v)},
+    {key:"Unvan",        label:"Ünvan",         cls:"wrap-cell", fmt:v=>disp(v)},
+    {key:"9-Box",        label:"9-Box",         fmt:v=>disp(v)},
+    {key:"Talent Kararı",label:"Talent Kararı", fmt:v=>disp(v)},
+    {key:"Succession",   label:"Succession",    fmt:v=>disp(v)},
+    {key:"_detay",       label:"Detay",         cls:"detay-cell", rawFmt:(v,r)=>_talentDetailCell(r)},
+  ];
+}
+
+/* Explorer satır "Detay" hücresi — ikincil alanları inline <details> ile açar (yeni
+   modal/rota/drawer yok; mevcut expander deseni). Veri uydurulmaz; boş alan disp/blank
+   gösterimini korur. Gerekçe tam metni burada görünür (varsayılan tabloda ayrı sütun yok). */
+function _talentDetailCell(r){
+  const nfmt = (v,d) => isBlank(v) ? disp(v) : trNumber(v, d);
+  const items = [
+    ["Kıdem (Yıl)",           nfmt(r["Kıdem (Yıl)"], 1)],
+    ["Performans Ortalaması", nfmt(r["Perf Ort"], 2)],
+    ["Assessment",            nfmt(r["Assessment"], 2)],
+    ["Assessment Tipi",       disp(r["Assessment Tipi"])],
+    ["Potansiyel",            disp(r["Potansiyel"])],
+    ["Performans",            disp(r["Performans"])],
+    ["Önerilen Aksiyon",      disp(r["Önerilen Aksiyon"])],
+    ["Gerekçe",               disp(r["Gerekçe"])],
+  ];
+  return `<details class="talent-detay"><summary>Detay</summary>
+    <div class="talent-detay-body">
+      ${items.map(([l,v])=>`<div><span>${esc(l)}</span><div>${esc(v)}</div></div>`).join("")}
+    </div></details>`;
 }
 
 /* Explorer "Gerekçe" hücresi: satır yüksekliğini şişirmemesi için kompakt önizleme —
@@ -132,7 +163,7 @@ function _dashRisks(){
   });
   const head = `<h3 class="tp-panel-title">Açık Halefiyet Riskleri</h3>`;
   if(!all.length) return head + emptyState("Açık risk taşıyan pozisyon bulunmuyor.");
-  const rows = all.slice(0,5).map(o => {
+  const rows = all.slice(0,4).map(o => {
     const flags = o.flags.map(f => badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)).join(" ");
     return `<div class="tp-risk-item">
       <div class="tp-risk-main"><b>${esc(disp(o.p["Pozisyon"]))}</b>
@@ -142,7 +173,8 @@ function _dashRisks(){
     </div>`;
   }).join("");
   return head + `<div class="tp-risk-list">${rows}</div>
-    <div class="caption">İlk 5 / ${all.length} · tümü: Yönetici Karar Özeti → Karar Kuyruğu.</div>`;
+    <button class="btn secondary small tp-risk-all" data-flow="exec">Tüm riskleri görüntüle →</button>
+    <div class="caption">İlk 4 / ${all.length} açık riskli pozisyon.</div>`;
 }
 
 /* Sağ — Yönetim Akışı (mevcut navigasyon/deep-link; yeni rota yok). */

@@ -649,25 +649,28 @@ td.wrap-cell .badge{margin:2px 4px 2px 0;}
 #rq_table table.data thead th:nth-child(4){width:12%}
 #rq_table table.data thead th:nth-child(5){width:14%}
 
-/* --- Talent Pool Explorer (#talent_table, 16 kolon; kompakt satır + Gerekçe önizleme korunur) --- */
+/* --- Talent Pool Explorer (#talent_table, 9 varsayılan kolon; yatay scroll YOK) ---
+   İkincil alanlar tablodan çıkarıldı → 9 okunabilir/kompakt kolon container'a sığar.
+   Ad Soyad/Ünvan doğal sarabilir (wrap-cell); satırlar tek satıra yakın kalır. */
 #talent_table table.data{table-layout:fixed;width:100%;}
 #talent_table table.data th,#talent_table table.data td{white-space:normal;overflow-wrap:anywhere;}
-#talent_table table.data thead th:nth-child(1){width:5%}
-#talent_table table.data thead th:nth-child(2){width:8%}
-#talent_table table.data thead th:nth-child(3){width:5%}
-#talent_table table.data thead th:nth-child(4){width:7%}
-#talent_table table.data thead th:nth-child(5){width:8%}
-#talent_table table.data thead th:nth-child(6){width:5%}
-#talent_table table.data thead th:nth-child(7){width:5%}
-#talent_table table.data thead th:nth-child(8){width:5%}
-#talent_table table.data thead th:nth-child(9){width:6%}
-#talent_table table.data thead th:nth-child(10){width:5%}
-#talent_table table.data thead th:nth-child(11){width:5%}
-#talent_table table.data thead th:nth-child(12){width:6%}
-#talent_table table.data thead th:nth-child(13){width:7%}
-#talent_table table.data thead th:nth-child(14){width:7%}
-#talent_table table.data thead th:nth-child(15){width:8%}
-#talent_table table.data thead th:nth-child(16){width:8%}
+#talent_table table.data thead th:nth-child(1){width:8%}   /* Sicil No */
+#talent_table table.data thead th:nth-child(2){width:15%}  /* Ad Soyad */
+#talent_table table.data thead th:nth-child(3){width:9%}   /* Seviye */
+#talent_table table.data thead th:nth-child(4){width:11%}  /* Firma */
+#talent_table table.data thead th:nth-child(5){width:18%}  /* Ünvan */
+#talent_table table.data thead th:nth-child(6){width:8%}   /* 9-Box */
+#talent_table table.data thead th:nth-child(7){width:10%}  /* Talent Kararı */
+#talent_table table.data thead th:nth-child(8){width:9%}   /* Succession */
+#talent_table table.data thead th:nth-child(9){width:12%}  /* Detay */
+/* Satır "Detay" açılımı — ikincil alanların kompakt kv listesi (yeni modal/rota/drawer yok). */
+#talent_table .talent-detay>summary{cursor:pointer;color:var(--brand-2);font-size:.82rem;
+  list-style:none;display:inline-block;}
+#talent_table .talent-detay>summary::-webkit-details-marker{display:none;}
+#talent_table .talent-detay-body{margin-top:6px;display:flex;flex-direction:column;gap:5px;}
+#talent_table .talent-detay-body>div{display:flex;flex-direction:column;}
+#talent_table .talent-detay-body span{color:var(--text-2);font-size:.72rem;}
+#talent_table .talent-detay-body>div>div{font-size:.82rem;color:var(--text);overflow-wrap:anywhere;}
 
 /* --- Aday Keşfi sonuç tablosu (#discovery_table, 19 kolon; Gerekçe önizleme korunur) --- */
 #discovery_table table.data{table-layout:fixed;width:100%;}
