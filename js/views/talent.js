@@ -64,41 +64,52 @@ function _renderNinebox(mount, matrix){
 
 let _talentUpdate = () => {};
 
-/* ===================== MOD: EXPLORER (mevcut) ===================== */
+/* ===================== MOD: EXPLORER (mevcut) — 3 panelli karar çalışma alanı ===================== */
+/* Sol: 9-Box Navigator (giriş noktası) · Orta: Talent Pool Explorer (ana çalışma alanı) ·
+   Sağ: Talent Review Özeti (mevcut veriden bağlam). Hesap/filtre/hücre-seçim mantığı
+   DEĞİŞMEDİ (aynı applyTalentFilters/nineboxMatrix/_renderNinebox); yalnızca yerleşim
+   ve mevcut fonksiyonların (distribution) render katmanında yeniden kullanımı. */
 function _renderExplorerMode(host){
   const all = DATA.talent;
-  const summary = talentSummary(all);
   const options = talentFilterOptions(all);
   const filterFields = C.TALENT_FILTER_COLUMNS.map(col =>
     multiselectField("tf_"+col, C.TALENT_FILTER_LABELS[col]||col, options[col]||[])).join("");
 
   host.innerHTML = `
-    <div class="metric-grid">
-      ${metricCard("Talent Pool — Toplam Kişi", summary.total)}
-      ${metricCard("Assessment Eksik / Belirtilmemiş", summary.assessment_blank)}
+    <div class="tp-workspace">
+      <aside class="panel tp-panel tp-nav">
+        <h3 class="tp-panel-title">9-Box Performans × Potansiyel</h3>
+        ${note("info", `Bu 9-Box görünümü <b>tüm çalışan popülasyonunu değil</b>, yalnızca
+          Talent Pool kapsamındaki kişileri gösterir. Boş hücre (0) = <b>bu kapsamda kayıt
+          yok</b> (veri hatası değildir).`)}
+        <div class="caption">Hücreye tıklayın: Yatay Performans (Düşük→Yüksek) ·
+          Dikey Potansiyel (Yüksek→Düşük); sayı = kişi.</div>
+        <div id="talent_matrix"></div>
+        <div id="talent_nav_summary" class="tp-nav-summary"></div>
+      </aside>
+
+      <section class="panel tp-panel tp-main">
+        <h3 class="tp-panel-title">Talent Pool Explorer</h3>
+        <div id="talent_context" class="tp-context"></div>
+        <div id="talent_drill"></div>
+        <div class="tp-filters-head">Filtreler</div>
+        <div class="controls" id="talent_filters">${filterFields}</div>
+        <div id="talent_table"></div>
+      </section>
+
+      <aside class="panel tp-panel tp-review">
+        <h3 class="tp-panel-title">Talent Review Özeti</h3>
+        <div id="talent_review_summary"></div>
+      </aside>
     </div>
-    <div class="distros">
-      <div class="panel"><h3>9-Box Dağılımı</h3>${renderBars(summary.ninebox)}</div>
-      <div class="panel"><h3>Talent Kararı Dağılımı</h3>${renderBars(summary.talent_karari)}</div>
-      <div class="panel"><h3>Succession Dağılımı</h3>${renderBars(summary.succession)}</div>
-    </div>
-    <h3>Filtreler</h3>
-    <div class="controls" id="talent_filters">${filterFields}</div>
-    <h3>9-Box Görünümü</h3>
-    ${note("info", `<b>Kapsam: Talent Pool — ${summary.total} kişi.</b> Bu 9-Box görünümü
-      <b>tüm çalışan popülasyonunu değil</b>, yalnızca Talent Pool kapsamındaki kişileri
-      gösterir. Boş hücre (0) = <b>bu kapsamda kayıt yok</b> (veri hatası değildir).`)}
-    <div class="caption">Hücreye tıklayarak kategoriye odaklanın. Yatay: Performans
-      (Düşük→Yüksek) · Dikey: Potansiyel (Yüksek→Düşük); sayı = kişi.</div>
-    <div id="talent_matrix"></div>
-    <div id="talent_drill"></div>
-    <h3>Talent Pool Explorer</h3>
-    <div id="talent_table"></div>
   `;
 
   const matrixEl = document.getElementById("talent_matrix");
+  const navSummaryEl = document.getElementById("talent_nav_summary");
+  const contextEl = document.getElementById("talent_context");
   const drillEl = document.getElementById("talent_drill");
   const tableEl = document.getElementById("talent_table");
+  const reviewEl = document.getElementById("talent_review_summary");
   const cols = _talentExplorerColumns();
 
   _talentUpdate = function(){
@@ -109,15 +120,28 @@ function _renderExplorerMode(host){
     _renderNinebox(matrixEl, matrix);
 
     const cell = _talentState.cell;
+    const scoped = cell === "Tümü" ? base : base.filter(r => String(r["9-Box"]).trim() === cell);
+
+    // Sol panel — kompakt özet (filtrelenen / toplam / 9-Box eksik).
+    const boxMissing = base.filter(r => isBlank(r["9-Box"])).length;
+    navSummaryEl.innerHTML = `<div class="tp-stat"><span>Filtrelenen kişi</span><b>${base.length}</b></div>
+      <div class="tp-stat"><span>Toplam kişi</span><b>${all.length}</b></div>
+      <div class="tp-stat"><span>9-Box eksik</span><b>${boxMissing}</b></div>`;
+
+    // Orta panel — bağlam bandı + (varsa) hızlı önizleme (mevcut davranış: ilk 15).
     if(cell === "Tümü"){
-      drillEl.innerHTML = emptyState("Tüm kategoriler gösteriliyor. Bir hücreye tıklayarak o 9-Box kategorisine odaklanın.");
+      contextEl.innerHTML = `<div class="tp-context-line muted">Tüm Talent Pool kayıtları
+        gösteriliyor. Bir 9-Box hücresine tıklayarak inceleyin.</div>`;
+      drillEl.innerHTML = "";
     } else {
       const meaning = DATA.meta.ninebox.meaning[cell] || "";
-      const count = (matrix.rows.flat().find(c=>c.label===cell)||{}).count || 0;
-      const people = base.filter(r => String(r["9-Box"]).trim() === cell);
-      let body;
-      if(!people.length){
-        body = emptyState("Bu kategoride mevcut filtrelerle kişi yok — filtreleri gözden geçirin.");
+      const cellInfo = (matrix.rows.flat().find(c=>c.label===cell)) || {};
+      contextEl.innerHTML = `<div class="tp-context-line"><b>Seçili Grup:</b> ${esc(cell)}
+        <span class="muted">— Performans: ${esc(cellInfo.performance||"—")} ·
+        Potansiyel: ${esc(cellInfo.potential||"—")}</span></div>
+        ${meaning ? `<div class="tp-context-mean muted">${esc(meaning)}</div>` : ""}`;
+      if(!scoped.length){
+        drillEl.innerHTML = emptyState("Bu kategoride mevcut filtrelerle kişi yok — filtreleri gözden geçirin.");
       } else {
         const dcols = [
           {key:"Ad-Soyad",label:"Ad Soyad",fmt:v=>disp(v)},
@@ -126,26 +150,44 @@ function _renderExplorerMode(host){
           {key:"Seviye",label:"Seviye",fmt:v=>disp(v)},
           {key:"9-Box",label:"9-Box",fmt:v=>disp(v)},
         ];
-        body = buildTable(dcols, people.slice(0,15));
-        if(people.length>15) body += `<div class="caption">İlk 15 gösteriliyor (toplam ${people.length} kişi).</div>`;
+        let body = buildTable(dcols, scoped.slice(0,15));
+        if(scoped.length>15) body += `<div class="caption">İlk 15 gösteriliyor (toplam ${scoped.length} kişi).</div>`;
+        drillEl.innerHTML = body;
       }
-      drillEl.innerHTML = `<div class="eks-ddh">
-        <div class="eks-ddh-title">${esc(cell)} · ${count} kişi</div>
-        <div class="eks-ddh-mean">${esc(meaning)}</div></div>${body}`;
     }
 
-    let filtered = base;
-    if(cell !== "Tümü") filtered = base.filter(r => String(r["9-Box"]).trim() === cell);
+    // Orta panel — mevcut Explorer tablosu (Filtrelenen Kişi kartı + Gerekçe önizleme korunur).
     let tbl = `<div class="metric-grid"><div class="metric"><div class="m-label">Filtrelenen Kişi</div>
-      <div class="m-value">${filtered.length}</div></div></div>`;
-    if(!filtered.length){
+      <div class="m-value">${scoped.length}</div></div></div>`;
+    if(!scoped.length){
       tbl += emptyState("Seçilen filtre / 9-Box kategorisi ile eşleşen kişi yok.");
     } else {
-      tbl += buildTable(cols, filtered);
+      tbl += buildTable(cols, scoped);
       tbl += `<div class="caption">Kaynak: Yetenek Havuzu (salt-okunur). 9-Box değerleri
         yeniden hesaplanmaz; boş alanlar 'Belirtilmedi'.</div>`;
     }
     tableEl.innerHTML = tbl;
+
+    // Sağ panel — Talent Review Özeti (yeni veri/skor yok; mevcut distribution() çağrısı).
+    const scopeLabel = cell === "Tümü" ? "Tüm Talent Pool" : cell;
+    if(!scoped.length){
+      reviewEl.innerHTML = `<div class="tp-review-scope"><span>Kapsam</span><b>${esc(scopeLabel)}</b></div>
+        ${emptyState("Kayıt bulunmuyor")}`;
+    } else {
+      const kararDist = distribution(scoped, "Talent Kararı");
+      const succDist = distribution(scoped, "Succession");
+      reviewEl.innerHTML = `
+        <div class="tp-review-scope"><span>Kapsam</span><b>${esc(scopeLabel)}</b></div>
+        <div class="tp-review-count"><span>Kişi sayısı</span><b>${scoped.length}</b></div>
+        <div class="tp-review-block"><h4>Talent Kararı Dağılımı</h4>${renderBars(kararDist)}</div>
+        <div class="tp-review-block"><h4>Succession Dağılımı</h4>${renderBars(succDist)}</div>
+        <div class="tp-review-block muted">
+          <div>Kararı veren / kalibrasyon grubu: <b>Kayıt bulunmuyor</b></div>
+          <div>Sonraki gözden geçirme tarihi: <b>Kalibrasyon tarihi yok</b></div>
+        </div>
+        <div class="caption">Bireysel karar kayıtlarını incelemek için
+          <b>Kalibrasyon Görünümü</b> moduna geçin.</div>`;
+    }
   };
 
   document.querySelectorAll("#talent_filters select").forEach(sel => sel.onchange = _talentUpdate);
