@@ -212,9 +212,9 @@ function _renderExplorerMode(host){
 
   // FINAL dashboard: grid-template-areas ile 5 panel (mobil sıralama kontrolü için doğrudan
   // grid çocukları). Sol: 9-Box + Riskler · Orta: Scorecard + Kapsam · Sağ: Yönetim Akışı.
-  // FINAL yerleşim (grid-template-areas): S1 9-Box | Scorecard | Yönetim Akışı ·
-  // S2 Halefiyet Kapsamı (sol+orta geniş) · S3 Açık Halefiyet Riskleri (tam genişlik yatay).
-  // Explorer .tp-dash dışında ayrı tam genişlik. Yönetim Akışı satır span etmez.
+  // Yerleşim: S1 sol 9-Box | orta (Scorecard + hemen altında Halefiyet Kapsamı, aynı orta
+  // kolonda flex-stack, 16px gap) | sağ Yönetim Akışı · S2 Açık Halefiyet Riskleri tam
+  // genişlik yatay bant. Explorer .tp-dash dışında ayrı tam genişlik.
   host.innerHTML = `
     <div class="tp-dash">
       <aside class="panel tp-panel tp-nav">
@@ -224,9 +224,11 @@ function _renderExplorerMode(host){
         <div id="talent_matrix"></div>
         <div id="talent_nav_summary" class="tp-nav-summary"></div>
       </aside>
-      <section class="panel tp-panel tp-score">${_dashScorecard()}</section>
+      <div class="tp-mid">
+        <section class="panel tp-panel tp-score">${_dashScorecard()}</section>
+        <section class="panel tp-panel tp-equity">${_dashEquity()}</section>
+      </div>
       <aside class="panel tp-panel tp-flow">${_dashFlow()}</aside>
-      <section class="panel tp-panel tp-equity">${_dashEquity()}</section>
       <aside class="panel tp-panel tp-risks">${_dashRisks()}</aside>
     </div>
 

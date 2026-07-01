@@ -156,14 +156,15 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
    geniş (sağ boş) · S3: Açık Halefiyet Riskleri tam genişlik. Yönetim Akışı satır span etmez. */
 .tp-dash{display:grid;gap:16px;align-items:start;
   grid-template-columns:340px minmax(620px,1fr) 300px;
-  grid-template-areas:"nine score flow" "equity equity ." "risks risks risks";}
-.tp-nav{grid-area:nine;} .tp-score{grid-area:score;} .tp-flow{grid-area:flow;}
-.tp-equity{grid-area:equity;} .tp-risks{grid-area:risks;}
+  grid-template-areas:"nine mid flow" "risks risks risks";}
+.tp-nav{grid-area:nine;} .tp-mid{grid-area:mid;} .tp-flow{grid-area:flow;} .tp-risks{grid-area:risks;}
+/* Orta kolon: Scorecard + hemen altında Halefiyet Kapsamı (16px gap, aynı kolon genişliği). */
+.tp-mid{display:flex;flex-direction:column;gap:16px;min-width:0;}
 /* Min 3-kolon toplamı 340+620+300+2*16 ~1292px; taşmayı önlemek için altında 2 kolon. */
 @media(max-width:1340px){ .tp-dash{grid-template-columns:1fr 1fr;
-  grid-template-areas:"nine score" "equity equity" "risks risks" "flow flow";} }
+  grid-template-areas:"nine mid" "risks risks" "flow flow";} }
 @media(max-width:760px){ .tp-dash{grid-template-columns:1fr;
-  grid-template-areas:"nine" "score" "equity" "risks" "flow";} }
+  grid-template-areas:"nine" "mid" "risks" "flow";} }
 .tp-panel{margin:0;min-width:0;}
 .tp-panel-title{margin:0 0 8px;font-size:1rem;}
 /* Explorer 9-Box Navigator — dar sol panelde eksiksiz sığar (yatay scroll yok):
