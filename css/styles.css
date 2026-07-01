@@ -151,25 +151,21 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
    Sağ: Yönetim Akışı. Hiçbir panel/tablo global yatay scroll üretmez. */
 /* FINAL dashboard — grid-template-areas ile kilitli yerleşim (mobil sıralama kontrolü).
    Masaüstü: sol 330-360 / orta esnek (en büyük) / sağ 280-310, 16px aralık. */
+/* Üç BAĞIMSIZ kolon stack'i (grid-area/row-span YOK). Her kolon flex-column; her panel
+   doğal içeriği kadar yüksek. Sol 340 / orta esnek (en geniş) / sağ 300, 16px aralık. */
 .tp-dash{display:grid;gap:16px;align-items:start;
-  grid-template-columns:minmax(330px,360px) minmax(600px,1fr) minmax(280px,310px);
-  grid-template-areas:"nine score flow" "risks equity flow";}
-.tp-nav{grid-area:nine;} .tp-score{grid-area:score;} .tp-equity{grid-area:equity;}
-.tp-risks{grid-area:risks;}
-/* Yönetim Akışı sağ kolonda İKİ dashboard satırına yayılır (align-self:stretch). */
-.tp-flow{grid-area:flow;align-self:stretch;}
-/* 3 kolonun min toplamı (330+600+280+2*16) ~1242px; taşmayı önlemek için 3 kolon yalnızca
-   yeterli genişlikte, aksi halde 2 kolon. */
-@media(max-width:1320px){ .tp-dash{grid-template-columns:1fr 1fr;
-  grid-template-areas:"nine score" "risks equity" "flow flow";} }
-@media(max-width:760px){ .tp-dash{grid-template-columns:1fr;
-  grid-template-areas:"nine" "score" "equity" "risks" "flow";} }
+  grid-template-columns:340px minmax(620px,1fr) 300px;}
+.tp-col{display:flex;flex-direction:column;gap:16px;min-width:0;}
+/* Min toplam 340+620+300+2*16 = 1292px; taşmayı önlemek için 3 kolon yeterli genişlikte,
+   aksi halde 2 kolon (sağ tam genişlik), 760 altı tek kolon. */
+@media(max-width:1340px){ .tp-dash{grid-template-columns:1fr 1fr;} .tp-col-right{grid-column:1 / -1;} }
+@media(max-width:760px){ .tp-dash{grid-template-columns:1fr;} .tp-col-right{grid-column:auto;} }
 .tp-panel{margin:0;min-width:0;}
 .tp-panel-title{margin:0 0 8px;font-size:1rem;}
 /* Explorer 9-Box Navigator — dar sol panelde eksiksiz sığar (yatay scroll yok):
    daha ince eksen + kompakt sabit hücre yüksekliği (~86px). Seçim/renk mantığı değişmez. */
 .tp-nav .ninebox{min-width:0;grid-template-columns:70px repeat(3,minmax(0,1fr));gap:6px;}
-.tp-nav .nb-cell{min-height:86px;padding:9px 10px;}
+.tp-nav .nb-cell{min-height:90px;padding:9px 10px;}
 .tp-nav .nb-cell .ct{font-size:1.4rem;}
 .tp-nav-note{margin-bottom:6px;}
 .tp-nav-summary{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
@@ -257,7 +253,10 @@ select[multiple]{min-height:104px;}
 @media(max-width:760px){.cascade{grid-template-columns:1fr;}}
 
 /* --- 9-Box matris --- */
-#talent_matrix,#kalib_matrix{overflow-x:auto;}
+/* Explorer navigatörü dar sol panelde eksiksiz sığar (minmax(0,1fr) blowout önler) →
+   scrollbar bırakmamak için overflow-x:visible. Kalibrasyon matrisi tam genişlik, auto korunur. */
+#talent_matrix{overflow-x:visible;}
+#kalib_matrix{overflow-x:auto;}
 /* minmax(0,1fr) veri kolonları için: uzun hücre içeriği (etiket/sayı) grid'i tüm sayfa
    genişliğinde taşırmasın diye (grid blowout önleyici). #kalib_matrix (tam genişlik) için
    de nötr/güvenli — davranış değişmez. */
