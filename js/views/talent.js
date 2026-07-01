@@ -153,22 +153,30 @@ function _renderExplorerMode(host){
     }
     tableEl.innerHTML = tbl;
 
-    // Sağ panel — Talent Review Özeti (yeni veri/skor yok; mevcut distribution() çağrısı).
+    // Sağ panel — Talent Review Özeti: kompakt kart ızgarası (yeni veri/skor yok;
+    // mevcut distribution() çağrısı). Tek geniş blok yerine Workday tarzı küçük kartlar —
+    // panel genişliği verimli kullanılır, sol 9-Box paneliyle yükseklik dengesi kurulur.
     const scopeLabel = cell === "Tümü" ? "Tüm Talent Pool" : cell;
     if(!scoped.length){
-      reviewEl.innerHTML = `<div class="tp-review-scope"><span>Kapsam</span><b>${esc(scopeLabel)}</b></div>
+      reviewEl.innerHTML = `<div class="tp-tile tp-tile-scope">
+          <div class="tp-tile-label">Kapsam</div>
+          <div class="tp-tile-value">${esc(scopeLabel)}</div>
+        </div>
         ${emptyState("Kayıt bulunmuyor")}`;
     } else {
       const kararDist = distribution(scoped, "Talent Kararı");
       const succDist = distribution(scoped, "Succession");
       reviewEl.innerHTML = `
-        <div class="tp-review-scope"><span>Kapsam</span><b>${esc(scopeLabel)}</b></div>
-        <div class="tp-review-count"><span>Kişi sayısı</span><b>${scoped.length}</b></div>
-        <div class="tp-review-dists">
-          <div class="tp-review-block"><h4>Talent Kararı Dağılımı</h4>${renderBars(kararDist)}</div>
-          <div class="tp-review-block"><h4>Succession Dağılımı</h4>${renderBars(succDist)}</div>
+        <div class="tp-review-tiles">
+          <div class="tp-tile tp-tile-scope">
+            <div class="tp-tile-label">Kapsam</div>
+            <div class="tp-tile-value">${esc(scopeLabel)}</div>
+            <div class="tp-tile-sub">${scoped.length} kişi</div>
+          </div>
+          <div class="tp-tile"><h4>Talent Kararı Dağılımı</h4>${renderBars(kararDist)}</div>
+          <div class="tp-tile"><h4>Succession Dağılımı</h4>${renderBars(succDist)}</div>
         </div>
-        <div class="tp-review-block muted">
+        <div class="tp-tile tp-tile-muted">
           <div>Kararı veren / kalibrasyon grubu: <b>Kayıt bulunmuyor</b></div>
           <div>Sonraki gözden geçirme tarihi: <b>Kalibrasyon tarihi yok</b></div>
         </div>

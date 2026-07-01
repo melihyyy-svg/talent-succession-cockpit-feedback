@@ -25,7 +25,7 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-size:15px; line-height:1.45;
 }
-.wrap{max-width:1440px;margin:0 auto;padding:1.1rem 1.2rem 3rem;}
+.wrap{max-width:1600px;margin:0 auto;padding:1.1rem 1.2rem 3rem;}
 h1,h2,h3,h4{color:var(--text);letter-spacing:-.01em;margin:.2rem 0 .6rem;}
 h2{font-size:1.3rem;} h3{font-size:1.06rem;color:var(--text);}
 a{color:var(--brand-2);}
@@ -165,13 +165,21 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 .tp-context{margin:2px 0 10px;font-size:.9rem;}
 .tp-context-line b{color:var(--text);}
 .tp-context-mean{font-size:.82rem;margin-top:2px;}
-/* Talent Review Özeti artık sabit sağ rail değil; üst overview'da yatay/kompakt blok. */
+/* Talent Review Özeti — sabit sağ rail değil, kompakt çok-kartlı (tile) blok. Tek geniş
+   metin/bar duvarı yerine Workday tarzı küçük kartlar: panel genişliği verimli kullanılır,
+   sol 9-Box paneliyle yükseklik dengesi kurulur (align-items:start ile birlikte). */
 .tp-review{}
-.tp-review-scope,.tp-review-count{display:flex;justify-content:space-between;align-items:baseline;
-  gap:8px;font-size:.86rem;margin-bottom:6px;}
-.tp-review-dists{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}
-.tp-review-block{margin-top:14px;}
-.tp-review-block h4{margin:0 0 6px;font-size:.86rem;color:var(--text-2);}
+.tp-review-tiles{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  margin-bottom:10px;}
+.tp-tile{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;}
+.tp-tile h4{margin:0 0 6px;font-size:.82rem;color:var(--text-2);}
+.tp-tile-scope{display:flex;flex-direction:column;justify-content:center;}
+.tp-tile-label{font-size:.78rem;color:var(--text-2);}
+.tp-tile-value{font-weight:700;font-size:1rem;color:var(--text);margin-top:2px;}
+.tp-tile-sub{font-size:.8rem;color:var(--text-2);margin-top:2px;}
+.tp-tile-muted{color:var(--text-2);font-size:.86rem;}
+.tp-tile-muted div{margin:2px 0;}
 
 /* --- Filtre / form kontrolleri --- */
 .controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:10px 0;}
