@@ -163,18 +163,23 @@ function _dashRisks(){
   });
   const head = `<h3 class="tp-panel-title">Açık Halefiyet Riskleri</h3>`;
   if(!all.length) return head + emptyState("Açık risk taşıyan pozisyon bulunmuyor.");
+  // Kompakt, taranabilir satırlar (Workday "Succession Plans at Risk" mantığı). Tüm satır
+  // tıklanabilir (<button data-riskpos> → mevcut openInDetail drill-down); büyük buton yok.
   const rows = all.slice(0,4).map(o => {
     const flags = o.flags.map(f => badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)).join(" ");
-    return `<div class="tp-risk-item">
-      <div class="tp-risk-main"><b>${esc(disp(o.p["Pozisyon"]))}</b>
-        <span class="muted">${esc(disp(o.p["Firma"]))} · ${esc(disp(o.p["Seviye"]))}</span></div>
-      <div class="tp-risk-flags">${flags}</div>
-      <button class="btn secondary small" data-riskpos="${o.idx}">Karar dosyası →</button>
-    </div>`;
+    return `<button class="tp-risk-row" data-riskpos="${o.idx}"
+        aria-label="${esc(disp(o.p["Pozisyon"]))} — Pozisyon Karar Dosyası'nı aç">
+      <span class="tp-risk-info">
+        <span class="tp-risk-name">${esc(disp(o.p["Pozisyon"]))}</span>
+        <span class="tp-risk-meta">${esc(disp(o.p["Firma"]))} · ${esc(disp(o.p["Seviye"]))}</span>
+        <span class="tp-risk-flags">${flags}</span>
+      </span>
+      <span class="tp-risk-go" aria-hidden="true">›</span>
+    </button>`;
   }).join("");
   return head + `<div class="tp-risk-list">${rows}</div>
-    <button class="btn secondary small tp-risk-all" data-flow="exec">Tüm riskleri görüntüle →</button>
-    <div class="caption">İlk 4 / ${all.length} açık riskli pozisyon.</div>`;
+    <button class="tp-risk-all" data-flow="exec">Tüm riskleri görüntüle →</button>
+    <div class="caption tp-risk-note">İlk 4 / ${all.length} açık riskli pozisyon.</div>`;
 }
 
 /* Sağ — Yönetim Akışı (mevcut navigasyon/deep-link; yeni rota yok). */

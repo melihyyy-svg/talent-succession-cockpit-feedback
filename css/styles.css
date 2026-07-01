@@ -199,13 +199,23 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 .tp-eq-seg.k-none{background:#DC2626;}
 .tp-eq-nums{font-size:.76rem;margin-top:3px;}
 
-/* Açık Halefiyet Riskleri — kompakt liste (mevcut kuyruğun dashboard özeti). */
-.tp-risk-list{display:flex;flex-direction:column;gap:8px;}
-.tp-risk-item{border:1px solid var(--border);border-radius:10px;padding:8px 10px;
-  display:flex;flex-direction:column;gap:6px;}
-.tp-risk-main{display:flex;flex-direction:column;gap:1px;font-size:.86rem;}
-.tp-risk-flags{display:flex;flex-wrap:wrap;gap:4px;}
-.tp-risk-item .btn{align-self:flex-start;}
+/* Açık Halefiyet Riskleri — kompakt, taranabilir satır listesi (Workday "at risk" mantığı).
+   Kart/gölge yok; satırlar arasında hafif ayırıcı. Tüm satır tıklanabilir (drill-down). */
+.tp-risk-list{display:flex;flex-direction:column;}
+.tp-risk-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;
+  cursor:pointer;background:none;border:0;border-bottom:1px solid var(--border);
+  padding:9px 4px;border-radius:6px;transition:background .12s;}
+.tp-risk-row:last-of-type{border-bottom:0;}
+.tp-risk-row:hover{background:var(--bg-alt);}
+.tp-risk-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.tp-risk-name{font-weight:700;font-size:.9rem;color:var(--text);line-height:1.2;}
+.tp-risk-meta{font-size:.78rem;color:var(--text-2);}
+.tp-risk-flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:1px;}
+.tp-risk-go{flex:0 0 auto;color:var(--text-2);font-size:1.15rem;line-height:1;}
+.tp-risk-all{display:inline-block;margin-top:10px;background:none;border:0;padding:0;
+  color:var(--brand-2);font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;}
+.tp-risk-all:hover{text-decoration:underline;}
+.tp-risk-note{margin-top:4px;}
 
 /* Yönetim Akışı — tıklanabilir adımlar (mevcut navigasyona yönlendirir). */
 .tp-flow-list{display:flex;flex-direction:column;gap:8px;}
