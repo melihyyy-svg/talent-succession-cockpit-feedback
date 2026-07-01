@@ -355,15 +355,34 @@ select[multiple]{min-height:104px;}
 .signal-card:hover,.signal-card:focus-visible{transform:translateY(-2px);
   box-shadow:0 6px 18px rgba(20,24,60,.12),var(--shadow);outline:none;}
 .signal-card .sig-num{font-size:2.6rem;font-weight:800;line-height:1;color:var(--sig,#1F2440);}
-.signal-card .sig-label{font-weight:700;font-size:.96rem;margin:4px 0 8px;color:var(--text);}
-.signal-card .sig-action{color:var(--text-2);font-size:.82rem;display:flex;
-  justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--border);
+.signal-card .sig-label{font-weight:700;font-size:.96rem;margin:4px 0 2px;color:var(--text);}
+.signal-card .sig-desc{color:var(--text-2);font-size:.82rem;line-height:1.25;margin:0 0 8px;}
+.signal-card .sig-action{color:var(--sig,#1F2440);font-size:.82rem;font-weight:600;display:flex;
+  justify-content:flex-start;gap:6px;align-items:center;border-top:1px solid var(--border);
   padding-top:8px;}
-.signal-card .sig-go{color:var(--sig,#5B3FA8);font-weight:700;white-space:nowrap;}
+.signal-card .sig-go{color:var(--sig,#1E2A6B);font-weight:700;white-space:nowrap;}
+.sig-note{margin:8px 0 0;}
 .signal-card.t-danger{--sig:var(--danger);background:linear-gradient(180deg,var(--danger-bg),#fff 60%);}
 .signal-card.t-warning{--sig:var(--warning);background:linear-gradient(180deg,var(--warning-bg),#fff 60%);}
 .signal-card.t-info{--sig:var(--info);}
 .exec-drillpanel{margin-top:16px;}
+
+/* Öncelikli Pozisyonlar — kompakt, ince ayırıcılı satır listesi (kart/gölge yok; tüm satır
+   tıklanabilir → Pozisyon Karar Dosyası drill-down). Global yatay scroll üretmez. */
+.exec-prio-list{display:flex;flex-direction:column;}
+.exec-prio-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;
+  cursor:pointer;background:none;border:0;border-bottom:1px solid var(--border-subtle,#E6E8F0);
+  padding:9px 4px;border-radius:6px;transition:background .12s;}
+.exec-prio-row:last-of-type{border-bottom:0;}
+.exec-prio-row:hover{background:var(--surface-muted,#EEF0F8);}
+.epr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.epr-name{font-weight:700;font-size:.9rem;color:var(--text);line-height:1.2;}
+.epr-meta{font-size:.78rem;color:var(--text-2);}
+.epr-flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:1px;}
+.epr-go{flex:0 0 auto;color:var(--text-2);font-size:1.15rem;line-height:1;}
+.exec-prio-all{display:inline-block;margin-top:10px;background:none;border:0;padding:0;
+  color:var(--brand-navy,#1E2A6B);font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;}
+.exec-prio-all:hover{text-decoration:underline;}
 
 /* Tier 2 — kapsam vs hazır-halef */
 .cov-panel{padding:20px 22px;}

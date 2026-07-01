@@ -66,12 +66,13 @@ function _renderExecDrill(id){
   host.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
-/* Tier 1 — kritik sinyal kartı (tıklanabilir; drill tetikler). */
-function _signal(id, tone, num, label, action){
+/* Tier 1 — kritik sinyal kartı (tıklanabilir; drill tetikler). Sayı mevcut hesaptan gelir. */
+function _signal(id, tone, count, title, subtitle){
   return `<button class="signal-card t-${tone}" data-drill="${id}">
-    <div class="sig-num">${esc(num)}</div>
-    <div class="sig-label">${esc(label)}</div>
-    <div class="sig-action">${esc(action)}<span class="sig-go">Detaya in ›</span></div>
+    <div class="sig-num">${esc(count)}</div>
+    <div class="sig-label">${esc(title)}</div>
+    <div class="sig-desc">${esc(subtitle)}</div>
+    <div class="sig-action">${esc(count)} pozisyonu görüntüle <span class="sig-go">→</span></div>
   </button>`;
 }
 
@@ -94,8 +95,8 @@ function _coverageCompare(s, rn){
       <div class="cov-meaning">${rn.coverage}/${rn.total} pozisyonun <b>hazır halefi</b> var
         (YETENEK HAZIR / DOĞAL + HAZIR).</div>
     </div>
-    <div class="cov-gap">⚠️ <b>${gap} pozisyon</b> tanımlı yedeğe sahip ama <b>hazır halefi yok</b>.
-      <span class="muted">"Yedek var" ≠ "hazır halef" — kapsam, gerçek hazırlığı göstermez.</span></div>
+    <div class="cov-gap"><b>${gap} pozisyonda</b> tanımlı yedek bulunuyor; Ready Now halef bulunmuyor.
+      <span class="muted">Tanımlı yedek, Ready Now halef anlamına gelmez.</span></div>
   </div>`;
 }
 
@@ -103,8 +104,6 @@ function renderExec(el){
   const poz = DATA.positions;
   const s = calculateSummary(poz);
   const rn = readyNowStats();
-  const q = DATA.quality.counts;
-  const dq = q.error>0 ? "err" : (q.warning>0 ? "warn" : "ok");
 
   // Kritik karar listesi: ACİL+YÜKSEK öncelikli (ilk 12), zengin sütunlar.
   const critical = acilYuksekTop(poz, 12);
@@ -137,37 +136,66 @@ function renderExec(el){
   const _rqLabelToKey = {};
   SUCCESSION_RISK_ORDER.forEach(k => _rqLabelToKey[SUCCESSION_RISK_FLAGS[k].label] = k);
 
+  // V1.3-A — Öncelikli Pozisyonlar: mevcut risk kuyruğunun sırasıyla (urgencyRank→risk) ilk 5.
+  // Yeni sıralama/skor/kural üretmez; kartların altında kompakt, tıklanabilir satır listesi.
+  const _prio = [..._rqAll].sort((a,b)=>{
+    const ra=urgencyRank(a.p[C.URGENCY]), rb=urgencyRank(b.p[C.URGENCY]);
+    if(ra!==rb) return ra-rb;
+    const xa=num(a.p[C.RISK_TOTAL]), xb=num(b.p[C.RISK_TOTAL]);
+    return (Number.isNaN(xb)?-Infinity:xb)-(Number.isNaN(xa)?-Infinity:xa);
+  }).slice(0,5);
+  const _prioRows = _prio.map(o => {
+    const flags = o.flags.map(f=>badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)).join(" ");
+    return `<button class="exec-prio-row" data-pos="${o.idx}"
+        aria-label="${esc(disp(o.p["Pozisyon"]))} — Pozisyon Karar Dosyası'nı aç">
+      <span class="epr-info">
+        <span class="epr-name">${esc(disp(o.p["Pozisyon"]))}</span>
+        <span class="epr-meta">${esc(disp(o.p["Firma"]))} · ${esc(disp(o.p["Seviye"]))}</span>
+        <span class="epr-flags">${flags}</span>
+      </span>
+      <span class="epr-go" aria-hidden="true">›</span>
+    </button>`;
+  }).join("");
+
   el.innerHTML = `
     <header class="exec-head">
       <div class="exec-head-main">
         <div class="exec-eyebrow">YÖNETİCİ KARAR ÖZETİ</div>
-        <h2 class="exec-title">Bugün yönetimin müdahale etmesi gereken alanlar</h2>
-        <p class="exec-lede">Kritik pozisyonların yedeklilik riskini ve <b>hazır halef
-          (Ready-now)</b> kapasitesini tek bakışta görün; en kritik sinyallerden pozisyon
-          detayına inin.</p>
+        <h2 class="exec-title">Kritik Halefiyet Durumu</h2>
+        <p class="exec-lede">Kritik pozisyonlar, Ready Now kapsamı ve açık halefiyet riskleri.</p>
       </div>
       <div class="exec-meta">
         <span class="meta-chip">${s.critical_count} pozisyon</span>
-        <span class="meta-chip">Veri: ${esc(DATA.meta.generated_at)}</span>
-        <span class="meta-chip dq-${dq}">Veri Kalitesi: ${q.error}·${q.warning}·${q.info}</span>
+        ${isBlank(DATA.meta.generated_at) ? "" : `<span class="meta-chip">Veri tarihi: ${esc(DATA.meta.generated_at)}</span>`}
       </div>
     </header>
 
     <!-- TIER 1 — Kritik Sinyaller -->
     <section class="exec-section">
-      <div class="section-head"><h3>1 · Karar gerektiren kritik sinyaller</h3>
+      <div class="section-head"><h3>Kritik Sinyaller</h3>
         <span class="section-hint">Karta tıklayın → filtreli pozisyon listesi</span></div>
       <div class="signal-grid">
-        ${_signal("acil","danger", s.acil, "ACİL pozisyon", "Önce bunlara yedek/aksiyon planlayın")}
-        ${_signal("readygap","danger", rn.gap, "ACİL+YÜKSEK · Ready-now açığı", "Hazır halefi yok — hazırlık başlatın")}
-        ${_signal("nobackup","warning", s.coverage_absent, "Tanımlı yedeği olmayan pozisyon", "Yedek belirleme önceliği")}
+        ${_signal("acil","danger", s.acil, "Acil Pozisyon", "Yedek veya aksiyon planı gerektirir")}
+        ${_signal("readygap","danger", rn.gap, "Ready Now Açığı", "ACİL+YÜKSEK riskli pozisyonlarda hazır halef yok")}
+        ${_signal("nobackup","warning", s.coverage_absent, "Tanımlı Yedeği Yok", "Halef adayı tanımlanmamış pozisyonlar")}
       </div>
+      <div class="caption sig-note">Sinyaller aynı pozisyonda kesişebilir; kartlardaki sayılar toplanmaz.</div>
       <div id="exec_drill"></div>
+    </section>
+
+    <!-- Öncelikli Pozisyonlar (mevcut risk kuyruğu sırası; ilk 5) -->
+    <section class="exec-section">
+      <div class="section-head"><h3>Öncelikli Pozisyonlar</h3>
+        <span class="section-hint">Açık halefiyet riski taşıyan ilk ${_prio.length} pozisyon</span></div>
+      ${_prio.length
+        ? `<div class="exec-prio-list">${_prioRows}</div>
+           <button class="exec-prio-all" data-prio-all="1">Tüm açık halefiyet risklerini görüntüle →</button>`
+        : emptyState("Açık halefiyet riski bulunmuyor.")}
     </section>
 
     <!-- TIER 2 — Succession Sağlığı -->
     <section class="exec-section">
-      <div class="section-head"><h3>2 · Succession sağlığı: kapsam ≠ hazırlık</h3></div>
+      <div class="section-head"><h3>Kapsam ve Hazırlık</h3></div>
       <div class="panel cov-panel">
         ${_coverageCompare(s, rn)}
         <div class="cov-foot">
@@ -234,9 +262,15 @@ function renderExec(el){
     card.onclick = go;
     card.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } };
   });
-  // Kritik liste "Detayda aç" deep-link (kuyruk tablosu henüz boş; ayrı bağlanır)
+  // Kritik liste + Öncelikli Pozisyonlar satırları "Detayda aç" deep-link (data-pos → openInDetail)
   el.querySelectorAll(".exec-section [data-pos]").forEach(btn =>
     btn.onclick = () => openInDetail(Number(btn.getAttribute("data-pos"))));
+  // "Tüm açık halefiyet risklerini görüntüle" → mevcut Risk Kuyruğu bölümüne güvenli scroll.
+  const _prioAll = el.querySelector("[data-prio-all]");
+  if(_prioAll) _prioAll.onclick = () => {
+    const t = document.getElementById("rq_controls");
+    if(t) t.scrollIntoView({behavior:"smooth", block:"start"});
+  };
 
   // --- TIER 4: Açık Halefiyet Riskleri (Karar Kuyruğu) güncelleme + bağlama ---
   const _rqCountsEl = document.getElementById("rq_counts");
