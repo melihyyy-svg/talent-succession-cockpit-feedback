@@ -144,18 +144,20 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 #discovery_table .rationale-more>summary::-webkit-details-marker{display:none;}
 #discovery_table .rationale-full{margin-top:4px;font-size:.82rem;color:var(--text-2);white-space:normal;}
 
-/* === Talent Pool & 9-Box Explorer — kompakt üst özet + tam genişlik Explorer ===
-   (Workday bilgi hiyerarşisi referans alınır: önce özet/9-Box, sonra detaylı Explorer;
-   marka/logo/nav kopyalanmadı, mevcut tasarım dili korunur). Üstte 2 kolonlu
-   Talent Pool Overview (sol 9-Box Navigator · sağ Talent Review Özeti) — tablo genişliğinde
-   DEĞİL, kısa/karar odaklı. Altında tam genişlik Talent Pool Explorer.
-   #talent_matrix / .table-scroll zaten overflow-x:auto (global taşma yok). */
-.tp-overview{display:grid;grid-template-columns:minmax(410px,460px) minmax(0,1fr);
-  gap:16px;align-items:start;}
-@media(max-width:760px){ .tp-overview{grid-template-columns:1fr;} }
-.tp-panel{margin:0;}
+/* === Talent Pool & 9-Box — Workday esinli halefiyet dashboard'u ===
+   (bilgi mimarisi referans; marka/logo/nav/renk kopyalanmadı, mevcut tasarım dili korunur).
+   Üstte 3 kolon × 2 satır dashboard, altında tam genişlik Explorer.
+   Sol: 9-Box Navigator + Açık Halefiyet Riskleri · Orta: Scorecard + Halefiyet Kapsamı ·
+   Sağ: Yönetim Akışı. Hiçbir panel/tablo global yatay scroll üretmez. */
+.tp-dash{display:grid;gap:16px;align-items:start;
+  grid-template-columns:minmax(320px,360px) minmax(0,1fr) minmax(280px,320px);}
+.tp-col{display:flex;flex-direction:column;gap:16px;min-width:0;}
+@media(max-width:1200px){ .tp-dash{grid-template-columns:1fr 1fr;} .tp-col-right{grid-column:1 / -1;} }
+@media(max-width:760px){ .tp-dash{grid-template-columns:1fr;} .tp-col-right{grid-column:auto;} }
+.tp-panel{margin:0;min-width:0;}
 .tp-panel-title{margin:0 0 8px;font-size:1rem;}
-.tp-nav .ninebox{min-width:260px;}
+.tp-nav .ninebox{min-width:0;}
+.tp-nav-note{margin-bottom:6px;}
 .tp-nav-summary{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
 .tp-stat{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
   padding:8px 10px;background:var(--bg-alt);border-radius:10px;font-size:.86rem;}
@@ -165,21 +167,58 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 .tp-context{margin:2px 0 10px;font-size:.9rem;}
 .tp-context-line b{color:var(--text);}
 .tp-context-mean{font-size:.82rem;margin-top:2px;}
-/* Talent Review Özeti — sabit sağ rail değil, kompakt çok-kartlı (tile) blok. Tek geniş
-   metin/bar duvarı yerine Workday tarzı küçük kartlar: panel genişliği verimli kullanılır,
-   sol 9-Box paneliyle yükseklik dengesi kurulur (align-items:start ile birlikte). */
-.tp-review{}
-.tp-review-tiles{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  margin-bottom:10px;}
-.tp-tile{background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;
-  padding:10px 12px;}
-.tp-tile h4{margin:0 0 6px;font-size:.82rem;color:var(--text-2);}
-.tp-tile-scope{display:flex;flex-direction:column;justify-content:center;}
-.tp-tile-label{font-size:.78rem;color:var(--text-2);}
-.tp-tile-value{font-weight:700;font-size:1rem;color:var(--text);margin-top:2px;}
-.tp-tile-sub{font-size:.8rem;color:var(--text-2);margin-top:2px;}
-.tp-tile-muted{color:var(--text-2);font-size:.86rem;}
-.tp-tile-muted div{margin:2px 0;}
+
+/* Halefiyet Scorecard — iki büyük oranlı kart + ikincil metrik. */
+.tp-score-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+.tp-score-card{border:1px solid var(--border);border-left:4px solid var(--neutral,#5A6072);
+  border-radius:12px;padding:12px 14px;background:var(--bg-alt);}
+.tp-score-card.ok{border-left-color:var(--success,#0F9D8C);}
+.tp-score-card.warn{border-left-color:var(--warning,#B45309);}
+.tp-score-cap{font-size:.8rem;color:var(--text-2);font-weight:600;}
+.tp-score-num{font-size:2rem;font-weight:800;line-height:1.1;color:var(--text);margin:2px 0;
+  font-variant-numeric:tabular-nums;}
+.tp-score-pct{font-size:1rem;font-weight:700;color:var(--text-2);}
+.tp-score-sub{font-size:.8rem;color:var(--text-2);}
+.tp-score-mini{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  margin-top:12px;padding:8px 12px;background:var(--bg-alt);border-radius:10px;font-size:.88rem;}
+.tp-score-mini b{font-size:1.15rem;font-variant-numeric:tabular-nums;}
+
+/* Halefiyet Kapsamı — CSS yığılmış çubuk (harici kütüphane yok). */
+.tp-eq-legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.78rem;color:var(--text-2);margin-bottom:10px;}
+.tp-eq-key{display:inline-flex;align-items:center;gap:6px;}
+.tp-eq-key::before{content:"";width:11px;height:11px;border-radius:3px;background:var(--eqc,#ccc);}
+.tp-eq-key.k-ready::before{background:#0F9D8C;}
+.tp-eq-key.k-backup::before{background:#B45309;}
+.tp-eq-key.k-none::before{background:#DC2626;}
+.tp-eq-list{display:flex;flex-direction:column;gap:12px;}
+.tp-eq-head{display:flex;justify-content:space-between;gap:8px;font-size:.85rem;margin-bottom:4px;}
+.tp-eq-bar{display:flex;height:18px;border-radius:6px;overflow:hidden;background:var(--bg-alt);}
+.tp-eq-seg{height:100%;}
+.tp-eq-seg.k-ready{background:#0F9D8C;}
+.tp-eq-seg.k-backup{background:#B45309;}
+.tp-eq-seg.k-none{background:#DC2626;}
+.tp-eq-nums{font-size:.76rem;margin-top:3px;}
+
+/* Açık Halefiyet Riskleri — kompakt liste (mevcut kuyruğun dashboard özeti). */
+.tp-risk-list{display:flex;flex-direction:column;gap:8px;}
+.tp-risk-item{border:1px solid var(--border);border-radius:10px;padding:8px 10px;
+  display:flex;flex-direction:column;gap:6px;}
+.tp-risk-main{display:flex;flex-direction:column;gap:1px;font-size:.86rem;}
+.tp-risk-flags{display:flex;flex-wrap:wrap;gap:4px;}
+.tp-risk-item .btn{align-self:flex-start;}
+
+/* Yönetim Akışı — tıklanabilir adımlar (mevcut navigasyona yönlendirir). */
+.tp-flow-list{display:flex;flex-direction:column;gap:8px;}
+.tp-flow-step{display:flex;align-items:center;gap:10px;text-align:left;width:100%;font:inherit;
+  cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;transition:box-shadow .12s,transform .12s;}
+.tp-flow-step:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
+.tp-flow-n{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--brand-2);
+  color:#fff;font-weight:700;font-size:.82rem;display:flex;align-items:center;justify-content:center;}
+.tp-flow-txt{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;}
+.tp-flow-txt b{font-size:.9rem;}
+.tp-flow-txt span{font-size:.78rem;color:var(--text-2);}
+.tp-flow-go{color:var(--text-2);font-size:1.1rem;}
 
 /* --- Filtre / form kontrolleri --- */
 .controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:10px 0;}

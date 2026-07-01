@@ -108,7 +108,27 @@ mevcut kaynak verisiyle yan yana gösteren bir **"Halef Karşılaştırması"** 
   breadcrumb / drill-down davranışları değişmez.
 
 Yeni saf hesap `js/calc.js` içinde (`successorComparisonRows`);
-testler: `python tools/test_v11.py` (26/26).
+testler: `python tools/test_v11.py`.
+
+## V1.2-E – Workday esinli Halefiyet Dashboard'u (Talent Pool ekranı)
+
+**Talent Pool & 9-Box Explorer** ekranının üst alanı, Workday Succession Planning'in **bilgi
+mimarisi** referans alınarak (marka/logo/renk/nav kopyalanmadan) gerçek bir **karar
+dashboard'una** dönüştürüldü: 3 kolon × 2 satır, altında tam genişlik Explorer.
+
+- **Sol:** 9-Box Navigator (mevcut matris/seçim/filtre/özet korunur) + **Açık Halefiyet
+  Riskleri** (mevcut `openSuccessionRiskList`, ilk 5, mevcut kuyruk sırası, `openInDetail` deep-link).
+- **Orta:** **Halefiyet Scorecard** (mevcut `readyNowStats`/`calculateSummary`: Ready Now
+  Kapsamı %, Açık Ready Now Riski, Yedeksiz Kritik Rol; kaynakta target yok → gösterilmez) +
+  **Halefiyet Kapsamı** (seviye bazında CSS yığılmış çubuk: Hazır Şimdi / Yedek Var-Hazır Değil /
+  Tanımlı Yedek Yok).
+- **Sağ:** **Yönetim Akışı** — 4 tıklanabilir adım; mevcut `activate` / mode-switch / scroll
+  ile yönlendirir (yeni rota yok).
+
+Explorer (context bandı, filtreler, filtrelenen kişi kartı, kompakt tablo, Gerekçe önizleme+Detay)
+dashboard'un altında tam genişlikte korunur. Eski geniş "Talent Review Özeti" (wall-of-bars)
+kaldırıldı. Yeni skor/tahmin/kişi-bazlı join yok. Yeni saf hesap `js/calc.js` içinde
+(`successionEquityByLevel`); testler: `python tools/test_v11.py` (29/29).
 
 ## Veri üretimi
 

@@ -195,6 +195,38 @@ if _p_multi is not None:
           all(("Performans" in r["missing"]) == blank(b.get("Yedek_Perf"))
               for r, b in zip(_cmp, _src)))
 
+# V1.2-E — successionEquityByLevel: seviye bazında yığılmış (3 kova karşılıklı dışlayan)
+_EQ_ORDER = ["Başkan / GM", "Direktör / GMY", "Müdür"]
+
+
+def equity_by_level():  # js: successionEquityByLevel
+    groups = {}
+    for p in P:
+        lv = "Belirtilmedi" if blank(p.get("Seviye")) else str(p.get("Seviye")).strip()
+        g = groups.setdefault(lv, {"level": lv, "total": 0, "ready": 0,
+                                   "backupNotReady": 0, "noBackup": 0})
+        g["total"] += 1
+        n = len(backups_of(p.get("İsim")))
+        if pos_ready(p):
+            g["ready"] += 1
+        elif n > 0:
+            g["backupNotReady"] += 1
+        else:
+            g["noBackup"] += 1
+    known = [l for l in _EQ_ORDER if l in groups]
+    extra = sorted([l for l in groups if l not in _EQ_ORDER])
+    return [groups[l] for l in known + extra]
+
+
+_eq = equity_by_level()
+check("successionEquityByLevel: ready+backupNotReady+noBackup == total (her seviye)",
+      all(g["ready"] + g["backupNotReady"] + g["noBackup"] == g["total"] for g in _eq))
+check("successionEquityByLevel: toplam pozisyon == 177",
+      sum(g["total"] for g in _eq) == 177)
+check("successionEquityByLevel: bilinen seviye sırası korunur",
+      [g["level"] for g in _eq if g["level"] in _EQ_ORDER]
+      == [l for l in _EQ_ORDER if l in {g["level"] for g in _eq}])
+
 # Mevcut veri sabitleri (mutabakat dolaylı koruması)
 check("Veri sabit: 177 pozisyon", len(P) == 177)
 check("Veri sabit: 470 yedek", len(B) == 470)

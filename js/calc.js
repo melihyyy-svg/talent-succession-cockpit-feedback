@@ -261,6 +261,26 @@ function successorComparisonRows(positionName){
   });
 }
 
+/* === V1.2-E: Halefiyet Kapsamı (seviye bazında yığılmış) — SAF; pozisyon→yedek ilişkisi +
+   Ready Now allowlist + Seviye. Yeni skor/tahmin/kişi-bazlı join YOK. Üç kova karşılıklı
+   dışlayan: her pozisyon tam bir kovada (ready > backupNotReady > noBackup). */
+function successionEquityByLevel(){
+  const order = ["Başkan / GM", "Direktör / GMY", "Müdür"];
+  const groups = {};
+  DATA.positions.forEach(p => {
+    const lv = isBlank(p["Seviye"]) ? "Belirtilmedi" : String(p["Seviye"]).trim();
+    const g = groups[lv] || (groups[lv] = {level:lv, total:0, ready:0, backupNotReady:0, noBackup:0});
+    g.total++;
+    const n = lookupBackups(p["İsim"]).length;          // mevcut pozisyon→yedek ilişkisi
+    if(positionHasReady(p)) g.ready++;                    // en az bir Ready Now halef
+    else if(n > 0) g.backupNotReady++;                   // yedek var ama hazır değil
+    else g.noBackup++;                                   // tanımlı yedek yok
+  });
+  const known = order.filter(l => groups[l]);
+  const extra = Object.keys(groups).filter(l => !order.includes(l)).sort((a,b)=>a.localeCompare(b,"tr"));
+  return known.concat(extra).map(l => groups[l]);
+}
+
 function calculateSummary(rows){
   const total = rows.length;
   const counts = {};

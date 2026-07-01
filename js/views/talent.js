@@ -64,6 +64,104 @@ function _renderNinebox(mount, matrix){
 
 let _talentUpdate = () => {};
 
+/* ===================== DASHBOARD MODÜLLERİ (statik; positions verisi) =====================
+   Bu modüller Talent filtrelerinden/9-Box hücre seçiminden BAĞIMSIZDIR (pozisyon evreni
+   üzerinden mevcut hesaplar). Yeni skor/tahmin/join yok; yalnızca mevcut fonksiyonların
+   dashboard sunumu. */
+
+/* Orta üst — Halefiyet Scorecard (mevcut readyNowStats / calculateSummary). */
+function _dashScorecard(){
+  const s = calculateSummary(DATA.positions);
+  const rn = readyNowStats();
+  const covPct = trPct(100*rn.coverageRatio);
+  const gapPct = rn.acilYuksek ? trPct(100*rn.gap/rn.acilYuksek) : null;
+  return `<h3 class="tp-panel-title">Halefiyet Scorecard</h3>
+    <div class="tp-score-grid">
+      <div class="tp-score-card ok">
+        <div class="tp-score-cap">Ready Now Kapsamı</div>
+        <div class="tp-score-num">%${covPct}</div>
+        <div class="tp-score-sub">${rn.coverage}/${rn.total} pozisyonun hazır (Ready Now) halefi var</div>
+      </div>
+      <div class="tp-score-card warn">
+        <div class="tp-score-cap">Açık Ready Now Riski</div>
+        <div class="tp-score-num">${rn.gap}${gapPct!==null?` <span class="tp-score-pct">%${gapPct}</span>`:""}</div>
+        <div class="tp-score-sub">ACİL+YÜKSEK ${rn.acilYuksek} rolün hazır halefi yok</div>
+      </div>
+    </div>
+    <div class="tp-score-mini"><span>Yedeksiz Kritik Rol</span><b>${s.coverage_absent}</b></div>
+    <div class="caption">Mevcut doğrulanmış metrikler; kaynakta hedef/target alanı yoktur.</div>`;
+}
+
+/* Orta alt — Halefiyet Kapsamı (seviye bazında yüzde-100 yığılmış; successionEquityByLevel). */
+function _dashEquity(){
+  const levels = successionEquityByLevel();
+  const legend = `<div class="tp-eq-legend">
+    <span class="tp-eq-key k-ready">Hazır Şimdi</span>
+    <span class="tp-eq-key k-backup">Yedek Var / Hazır Değil</span>
+    <span class="tp-eq-key k-none">Tanımlı Yedek Yok</span></div>`;
+  const bars = levels.map(l => {
+    const pr = l.total ? 100*l.ready/l.total : 0;
+    const pb = l.total ? 100*l.backupNotReady/l.total : 0;
+    const pn = l.total ? 100*l.noBackup/l.total : 0;
+    const seg = (cls, w, lbl, n) => w>0
+      ? `<div class="tp-eq-seg ${cls}" style="width:${w.toFixed(1)}%" title="${lbl}: ${n}"></div>` : "";
+    return `<div class="tp-eq-row">
+      <div class="tp-eq-head"><span>${esc(l.level)}</span>
+        <span class="muted">${l.total} pozisyon</span></div>
+      <div class="tp-eq-bar">
+        ${seg("k-ready", pr, "Hazır Şimdi", l.ready)}
+        ${seg("k-backup", pb, "Yedek var / hazır değil", l.backupNotReady)}
+        ${seg("k-none", pn, "Tanımlı yedek yok", l.noBackup)}
+      </div>
+      <div class="tp-eq-nums muted">Hazır ${l.ready} · Yedek(hazır değil) ${l.backupNotReady} · Yedeksiz ${l.noBackup}</div>
+    </div>`;
+  }).join("");
+  return `<h3 class="tp-panel-title">Halefiyet Kapsamı</h3>${legend}
+    <div class="tp-eq-list">${bars}</div>
+    <div class="caption">Seviye bazında yüzde-100 yığılmış; baz = seviyedeki toplam pozisyon.
+      Pozisyon→yedek ilişkisi ve Ready Now allowlist'inden türetilir; yeni skor/tahmin/join yok.</div>`;
+}
+
+/* Sol alt — Açık Halefiyet Riskleri (mevcut openSuccessionRiskList; ilk 5, mevcut kuyruk sırası). */
+function _dashRisks(){
+  const all = openSuccessionRiskList().sort((a,b)=>{
+    const ra=urgencyRank(a.p[C.URGENCY]), rb=urgencyRank(b.p[C.URGENCY]);
+    if(ra!==rb) return ra-rb;
+    const xa=num(a.p[C.RISK_TOTAL]), xb=num(b.p[C.RISK_TOTAL]);
+    return (Number.isNaN(xb)?-Infinity:xb)-(Number.isNaN(xa)?-Infinity:xa);
+  });
+  const head = `<h3 class="tp-panel-title">Açık Halefiyet Riskleri</h3>`;
+  if(!all.length) return head + emptyState("Açık risk taşıyan pozisyon bulunmuyor.");
+  const rows = all.slice(0,5).map(o => {
+    const flags = o.flags.map(f => badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)).join(" ");
+    return `<div class="tp-risk-item">
+      <div class="tp-risk-main"><b>${esc(disp(o.p["Pozisyon"]))}</b>
+        <span class="muted">${esc(disp(o.p["Firma"]))} · ${esc(disp(o.p["Seviye"]))}</span></div>
+      <div class="tp-risk-flags">${flags}</div>
+      <button class="btn secondary small" data-riskpos="${o.idx}">Karar dosyası →</button>
+    </div>`;
+  }).join("");
+  return head + `<div class="tp-risk-list">${rows}</div>
+    <div class="caption">İlk 5 / ${all.length} · tümü: Yönetici Karar Özeti → Karar Kuyruğu.</div>`;
+}
+
+/* Sağ — Yönetim Akışı (mevcut navigasyon/deep-link; yeni rota yok). */
+function _dashFlow(){
+  const steps = [
+    ["1","Potansiyel ve 9-Box","9-Box matrisi ve potansiyel görünümü","matrix"],
+    ["2","Talent Havuzu","Explorer filtreleri ve tablosu","explorer"],
+    ["3","Halefiyet Riskleri","Yönetici Karar Özeti · Karar Kuyruğu","exec"],
+    ["4","Kalibrasyon ve Aksiyonlar","Kalibrasyon Görünümü / Aksiyon Takip","kalib"],
+  ];
+  return `<h3 class="tp-panel-title">Yönetim Akışı</h3>
+    <div class="tp-flow-list">${steps.map(([n,t,d,act])=>
+      `<button class="tp-flow-step" data-flow="${act}">
+        <span class="tp-flow-n">${n}</span>
+        <span class="tp-flow-txt"><b>${esc(t)}</b><span>${esc(d)}</span></span>
+        <span class="tp-flow-go">›</span></button>`).join("")}</div>
+    <div class="caption">Bu panel yalnız yönlendirme sunar; mevcut ekranlara götürür.</div>`;
+}
+
 /* ===================== MOD: EXPLORER (mevcut) — kompakt üst özet + tam genişlik Explorer =====================
    Üstte 2 kolonlu Talent Pool Overview (sol 9-Box Navigator · sağ Talent Review Özeti — kısa,
    karar odaklı, tablo genişliğinde DEĞİL). Altında tam genişlik Talent Pool Explorer.
@@ -77,22 +175,25 @@ function _renderExplorerMode(host){
     multiselectField("tf_"+col, C.TALENT_FILTER_LABELS[col]||col, options[col]||[])).join("");
 
   host.innerHTML = `
-    <div class="tp-overview">
-      <aside class="panel tp-panel tp-nav">
-        <h3 class="tp-panel-title">9-Box Performans × Potansiyel</h3>
-        ${note("info", `Bu 9-Box görünümü <b>tüm çalışan popülasyonunu değil</b>, yalnızca
-          Talent Pool kapsamındaki kişileri gösterir. Boş hücre (0) = <b>bu kapsamda kayıt
-          yok</b> (veri hatası değildir).`)}
-        <div class="caption">Hücreye tıklayın: Yatay Performans (Düşük→Yüksek) ·
-          Dikey Potansiyel (Yüksek→Düşük); sayı = kişi.</div>
-        <div id="talent_matrix"></div>
-        <div id="talent_nav_summary" class="tp-nav-summary"></div>
-      </aside>
+    <div class="tp-dash">
+      <div class="tp-col tp-col-left">
+        <aside class="panel tp-panel tp-nav">
+          <h3 class="tp-panel-title">9-Box Performans × Potansiyel</h3>
+          <div class="caption tp-nav-note">Yalnızca <b>Talent Pool</b> kapsamı; boş hücre (0)
+            = bu kapsamda kayıt yok (veri hatası değil). Hücreye tıklayın · Yatay Performans
+            (Düşük→Yüksek) · Dikey Potansiyel (Yüksek→Düşük); sayı = kişi.</div>
+          <div id="talent_matrix"></div>
+          <div id="talent_nav_summary" class="tp-nav-summary"></div>
+        </aside>
+        <aside class="panel tp-panel tp-risks">${_dashRisks()}</aside>
+      </div>
 
-      <aside class="panel tp-panel tp-review">
-        <h3 class="tp-panel-title">Talent Review Özeti</h3>
-        <div id="talent_review_summary"></div>
-      </aside>
+      <div class="tp-col tp-col-mid">
+        <section class="panel tp-panel">${_dashScorecard()}</section>
+        <section class="panel tp-panel">${_dashEquity()}</section>
+      </div>
+
+      <aside class="panel tp-panel tp-flow tp-col-right">${_dashFlow()}</aside>
     </div>
 
     <section class="panel tp-panel tp-main">
@@ -104,11 +205,22 @@ function _renderExplorerMode(host){
     </section>
   `;
 
+  // Dashboard risk kartı deep-link (mevcut openInDetail; yeni rota yok).
+  host.querySelectorAll("[data-riskpos]").forEach(btn =>
+    btn.onclick = () => openInDetail(Number(btn.getAttribute("data-riskpos"))));
+  // Yönetim Akışı — mevcut navigasyon/scroll (yeni rota yok).
+  host.querySelectorAll("[data-flow]").forEach(btn => btn.onclick = () => {
+    const a = btn.getAttribute("data-flow");
+    if(a === "matrix"){ const m=document.getElementById("talent_matrix"); if(m) m.scrollIntoView({behavior:"smooth",block:"start"}); }
+    else if(a === "explorer"){ const t=document.getElementById("talent_table"); if(t) t.scrollIntoView({behavior:"smooth",block:"start"}); }
+    else if(a === "exec"){ activate("exec"); }
+    else if(a === "kalib"){ const b=document.querySelector('#talent_mode [data-mode="kalibrasyon"]'); if(b) b.click(); }
+  });
+
   const matrixEl = document.getElementById("talent_matrix");
   const navSummaryEl = document.getElementById("talent_nav_summary");
   const contextEl = document.getElementById("talent_context");
   const tableEl = document.getElementById("talent_table");
-  const reviewEl = document.getElementById("talent_review_summary");
   const cols = _talentExplorerColumns();
 
   _talentUpdate = function(){
@@ -152,37 +264,6 @@ function _renderExplorerMode(host){
         yeniden hesaplanmaz; boş alanlar 'Belirtilmedi'.</div>`;
     }
     tableEl.innerHTML = tbl;
-
-    // Sağ panel — Talent Review Özeti: kompakt kart ızgarası (yeni veri/skor yok;
-    // mevcut distribution() çağrısı). Tek geniş blok yerine Workday tarzı küçük kartlar —
-    // panel genişliği verimli kullanılır, sol 9-Box paneliyle yükseklik dengesi kurulur.
-    const scopeLabel = cell === "Tümü" ? "Tüm Talent Pool" : cell;
-    if(!scoped.length){
-      reviewEl.innerHTML = `<div class="tp-tile tp-tile-scope">
-          <div class="tp-tile-label">Kapsam</div>
-          <div class="tp-tile-value">${esc(scopeLabel)}</div>
-        </div>
-        ${emptyState("Kayıt bulunmuyor")}`;
-    } else {
-      const kararDist = distribution(scoped, "Talent Kararı");
-      const succDist = distribution(scoped, "Succession");
-      reviewEl.innerHTML = `
-        <div class="tp-review-tiles">
-          <div class="tp-tile tp-tile-scope">
-            <div class="tp-tile-label">Kapsam</div>
-            <div class="tp-tile-value">${esc(scopeLabel)}</div>
-            <div class="tp-tile-sub">${scoped.length} kişi</div>
-          </div>
-          <div class="tp-tile"><h4>Talent Kararı Dağılımı</h4>${renderBars(kararDist)}</div>
-          <div class="tp-tile"><h4>Succession Dağılımı</h4>${renderBars(succDist)}</div>
-        </div>
-        <div class="tp-tile tp-tile-muted">
-          <div>Kararı veren / kalibrasyon grubu: <b>Kayıt bulunmuyor</b></div>
-          <div>Sonraki gözden geçirme tarihi: <b>Kalibrasyon tarihi yok</b></div>
-        </div>
-        <div class="caption">Bireysel karar kayıtlarını incelemek için
-          <b>Kalibrasyon Görünümü</b> moduna geçin.</div>`;
-    }
   };
 
   document.querySelectorAll("#talent_filters select").forEach(sel => sel.onchange = _talentUpdate);
