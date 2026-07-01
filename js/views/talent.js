@@ -212,30 +212,22 @@ function _renderExplorerMode(host){
 
   // FINAL dashboard: grid-template-areas ile 5 panel (mobil sıralama kontrolü için doğrudan
   // grid çocukları). Sol: 9-Box + Riskler · Orta: Scorecard + Kapsam · Sağ: Yönetim Akışı.
-  // FINAL konsolidasyon: üç BAĞIMSIZ kolon stack'i (grid-area/row-span YOK). Her kolon
-  // kendi içinde flex-column; her panel doğal içeriği kadar yüksek. Sağ Yönetim Akışı
-  // iki satırı SPAN ETMEZ.
+  // FINAL yerleşim (grid-template-areas): S1 9-Box | Scorecard | Yönetim Akışı ·
+  // S2 Halefiyet Kapsamı (sol+orta geniş) · S3 Açık Halefiyet Riskleri (tam genişlik yatay).
+  // Explorer .tp-dash dışında ayrı tam genişlik. Yönetim Akışı satır span etmez.
   host.innerHTML = `
     <div class="tp-dash">
-      <div class="tp-col tp-col-left">
-        <aside class="panel tp-panel tp-nav">
-          <h3 class="tp-panel-title">9-Box Performans × Potansiyel</h3>
-          <div class="caption tp-nav-note">Yalnızca <b>Talent Pool</b> kapsamı; boş hücre <b>0</b>
-            = bu kapsamda kayıt yok. Hücreye tıklayarak Explorer'ı filtreleyin.</div>
-          <div id="talent_matrix"></div>
-          <div id="talent_nav_summary" class="tp-nav-summary"></div>
-        </aside>
-        <aside class="panel tp-panel tp-risks">${_dashRisks()}</aside>
-      </div>
-
-      <div class="tp-col tp-col-mid">
-        <section class="panel tp-panel tp-score">${_dashScorecard()}</section>
-        <section class="panel tp-panel tp-equity">${_dashEquity()}</section>
-      </div>
-
-      <div class="tp-col tp-col-right">
-        <aside class="panel tp-panel tp-flow">${_dashFlow()}</aside>
-      </div>
+      <aside class="panel tp-panel tp-nav">
+        <h3 class="tp-panel-title">9-Box Performans × Potansiyel</h3>
+        <div class="caption tp-nav-note">Yalnızca <b>Talent Pool</b> kapsamı; boş hücre <b>0</b>
+          = bu kapsamda kayıt yok. Hücreye tıklayarak Explorer'ı filtreleyin.</div>
+        <div id="talent_matrix"></div>
+        <div id="talent_nav_summary" class="tp-nav-summary"></div>
+      </aside>
+      <section class="panel tp-panel tp-score">${_dashScorecard()}</section>
+      <aside class="panel tp-panel tp-flow">${_dashFlow()}</aside>
+      <section class="panel tp-panel tp-equity">${_dashEquity()}</section>
+      <aside class="panel tp-panel tp-risks">${_dashRisks()}</aside>
     </div>
 
     <section class="panel tp-panel tp-main">

@@ -151,21 +151,27 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
    Sağ: Yönetim Akışı. Hiçbir panel/tablo global yatay scroll üretmez. */
 /* FINAL dashboard — grid-template-areas ile kilitli yerleşim (mobil sıralama kontrolü).
    Masaüstü: sol 330-360 / orta esnek (en büyük) / sağ 280-310, 16px aralık. */
-/* Üç BAĞIMSIZ kolon stack'i (grid-area/row-span YOK). Her kolon flex-column; her panel
-   doğal içeriği kadar yüksek. Sol 340 / orta esnek (en geniş) / sağ 300, 16px aralık. */
+/* FINAL yerleşim — grid-template-areas (auto-placement YOK). Her panel doğal yüksekliğinde
+   (align-items:start). S1: 9-Box | Scorecard | Yönetim Akışı · S2: Halefiyet Kapsamı sol+orta
+   geniş (sağ boş) · S3: Açık Halefiyet Riskleri tam genişlik. Yönetim Akışı satır span etmez. */
 .tp-dash{display:grid;gap:16px;align-items:start;
-  grid-template-columns:340px minmax(620px,1fr) 300px;}
-.tp-col{display:flex;flex-direction:column;gap:16px;min-width:0;}
-/* Min toplam 340+620+300+2*16 = 1292px; taşmayı önlemek için 3 kolon yeterli genişlikte,
-   aksi halde 2 kolon (sağ tam genişlik), 760 altı tek kolon. */
-@media(max-width:1340px){ .tp-dash{grid-template-columns:1fr 1fr;} .tp-col-right{grid-column:1 / -1;} }
-@media(max-width:760px){ .tp-dash{grid-template-columns:1fr;} .tp-col-right{grid-column:auto;} }
+  grid-template-columns:340px minmax(620px,1fr) 300px;
+  grid-template-areas:"nine score flow" "equity equity ." "risks risks risks";}
+.tp-nav{grid-area:nine;} .tp-score{grid-area:score;} .tp-flow{grid-area:flow;}
+.tp-equity{grid-area:equity;} .tp-risks{grid-area:risks;}
+/* Min 3-kolon toplamı 340+620+300+2*16 ~1292px; taşmayı önlemek için altında 2 kolon. */
+@media(max-width:1340px){ .tp-dash{grid-template-columns:1fr 1fr;
+  grid-template-areas:"nine score" "equity equity" "risks risks" "flow flow";} }
+@media(max-width:760px){ .tp-dash{grid-template-columns:1fr;
+  grid-template-areas:"nine" "score" "equity" "risks" "flow";} }
 .tp-panel{margin:0;min-width:0;}
 .tp-panel-title{margin:0 0 8px;font-size:1rem;}
 /* Explorer 9-Box Navigator — dar sol panelde eksiksiz sığar (yatay scroll yok):
-   daha ince eksen + kompakt sabit hücre yüksekliği (~86px). Seçim/renk mantığı değişmez. */
-.tp-nav .ninebox{min-width:0;grid-template-columns:70px repeat(3,minmax(0,1fr));gap:6px;}
-.tp-nav .nb-cell{min-height:90px;padding:9px 10px;}
+   ince eksen + minmax(0,1fr) 3 eşit hücre. Etiketler hücre İÇİNDE kalır (word-break; taşma/
+   üst üste binme yok); sayılar büyük/okunaklı. Seçim/renk mantığı değişmez. */
+.tp-nav .ninebox{min-width:0;grid-template-columns:58px repeat(3,minmax(0,1fr));gap:6px;}
+.tp-nav .nb-cell{min-height:90px;padding:8px 9px;}
+.tp-nav .nb-cell .nm{font-size:.73rem;line-height:1.12;overflow-wrap:anywhere;word-break:break-word;}
 .tp-nav .nb-cell .ct{font-size:1.4rem;}
 .tp-nav-note{margin-bottom:6px;}
 .tp-nav-summary{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
@@ -212,13 +218,14 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
 .tp-eq-seg.k-none{background:#DC2626;}
 .tp-eq-nums{font-size:.76rem;margin-top:3px;}
 
-/* Açık Halefiyet Riskleri — kompakt, taranabilir satır listesi (Workday "at risk" mantığı).
-   Kart/gölge yok; satırlar arasında hafif ayırıcı. Tüm satır tıklanabilir (drill-down). */
-.tp-risk-list{display:flex;flex-direction:column;}
+/* Açık Halefiyet Riskleri — tam genişlik yatay band; ilk 4 kayıt kompakt grid (masaüstü 4'lü
+   yatay, orta 2'li, mobil tek). Ağır kart/gölge yok; hafif kenarlıklı, tıklanabilir hücreler. */
+.tp-risk-list{display:grid;gap:8px;grid-template-columns:repeat(4,minmax(0,1fr));}
+@media(max-width:1200px){ .tp-risk-list{grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media(max-width:760px){ .tp-risk-list{grid-template-columns:1fr;} }
 .tp-risk-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;
-  cursor:pointer;background:none;border:0;border-bottom:1px solid var(--border);
-  padding:9px 4px;border-radius:6px;transition:background .12s;}
-.tp-risk-row:last-of-type{border-bottom:0;}
+  cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:9px 11px;transition:background .12s;}
 .tp-risk-row:hover{background:var(--bg-alt);}
 .tp-risk-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
 .tp-risk-name{font-weight:700;font-size:.9rem;color:var(--text);line-height:1.2;}
