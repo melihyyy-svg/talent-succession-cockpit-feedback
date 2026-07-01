@@ -77,12 +77,11 @@ function _renderNinebox(mount, matrix){
       const sel = c.label===_talentState.cell ? " sel" : "";
       const empty = c.count===0 ? " nb-empty" : "";
       const color = TONE_HEX[c.tone] || TONE_HEX.neutral;
-      const sub = c.count===0 ? "Bu kapsamda kayıt yok"
-                              : `Pot: ${esc(c.potential)} · Perf: ${esc(c.performance)}`;
+      // Kompakt hücre: yalnızca kategori adı + kişi sayısı (tekrar eden alt-metin kaldırıldı;
+      // "0 = kayıt yok" bilgisi tek kez başlık altındaki nötr notta verilir).
       html += `<button class="nb-cell${sel}${empty}" style="--ct:${color}" data-cell="${esc(c.label)}">
         <div class="nm">${esc(c.label||"—")}</div>
-        <div class="ct">${c.count}</div>
-        <div class="sub">${sub}</div></button>`;
+        <div class="ct">${c.count}</div></button>`;
     });
   });
   html += `</div>`;
@@ -211,26 +210,22 @@ function _renderExplorerMode(host){
   const filterFields = C.TALENT_FILTER_COLUMNS.map(col =>
     multiselectField("tf_"+col, C.TALENT_FILTER_LABELS[col]||col, options[col]||[])).join("");
 
+  // FINAL dashboard: grid-template-areas ile 5 panel (mobil sıralama kontrolü için doğrudan
+  // grid çocukları). Sol: 9-Box + Riskler · Orta: Scorecard + Kapsam · Sağ: Yönetim Akışı.
   host.innerHTML = `
     <div class="tp-dash">
-      <div class="tp-col tp-col-left">
-        <aside class="panel tp-panel tp-nav">
-          <h3 class="tp-panel-title">9-Box Performans × Potansiyel</h3>
-          <div class="caption tp-nav-note">Yalnızca <b>Talent Pool</b> kapsamı; boş hücre (0)
-            = bu kapsamda kayıt yok (veri hatası değil). Hücreye tıklayın · Yatay Performans
-            (Düşük→Yüksek) · Dikey Potansiyel (Yüksek→Düşük); sayı = kişi.</div>
-          <div id="talent_matrix"></div>
-          <div id="talent_nav_summary" class="tp-nav-summary"></div>
-        </aside>
-        <aside class="panel tp-panel tp-risks">${_dashRisks()}</aside>
-      </div>
+      <aside class="panel tp-panel tp-nav">
+        <h3 class="tp-panel-title">9-Box Performans × Potansiyel</h3>
+        <div class="caption tp-nav-note">Yalnızca <b>Talent Pool</b> kapsamı; boş hücre <b>0</b>
+          = bu kapsamda kayıt yok. Hücreye tıklayarak Explorer'ı filtreleyin.</div>
+        <div id="talent_matrix"></div>
+        <div id="talent_nav_summary" class="tp-nav-summary"></div>
+      </aside>
 
-      <div class="tp-col tp-col-mid">
-        <section class="panel tp-panel">${_dashScorecard()}</section>
-        <section class="panel tp-panel">${_dashEquity()}</section>
-      </div>
-
-      <aside class="panel tp-panel tp-flow tp-col-right">${_dashFlow()}</aside>
+      <section class="panel tp-panel tp-score">${_dashScorecard()}</section>
+      <section class="panel tp-panel tp-equity">${_dashEquity()}</section>
+      <aside class="panel tp-panel tp-risks">${_dashRisks()}</aside>
+      <aside class="panel tp-panel tp-flow">${_dashFlow()}</aside>
     </div>
 
     <section class="panel tp-panel tp-main">

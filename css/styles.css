@@ -149,21 +149,34 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
    Üstte 3 kolon × 2 satır dashboard, altında tam genişlik Explorer.
    Sol: 9-Box Navigator + Açık Halefiyet Riskleri · Orta: Scorecard + Halefiyet Kapsamı ·
    Sağ: Yönetim Akışı. Hiçbir panel/tablo global yatay scroll üretmez. */
+/* FINAL dashboard — grid-template-areas ile kilitli yerleşim (mobil sıralama kontrolü).
+   Masaüstü: sol 330-360 / orta esnek (en büyük) / sağ 280-310, 16px aralık. */
 .tp-dash{display:grid;gap:16px;align-items:start;
-  grid-template-columns:minmax(320px,360px) minmax(0,1fr) minmax(280px,320px);}
-.tp-col{display:flex;flex-direction:column;gap:16px;min-width:0;}
-@media(max-width:1200px){ .tp-dash{grid-template-columns:1fr 1fr;} .tp-col-right{grid-column:1 / -1;} }
-@media(max-width:760px){ .tp-dash{grid-template-columns:1fr;} .tp-col-right{grid-column:auto;} }
+  grid-template-columns:minmax(330px,360px) minmax(0,1fr) minmax(280px,310px);
+  grid-template-areas:"nine score flow" "risks equity flow";}
+.tp-nav{grid-area:nine;} .tp-score{grid-area:score;} .tp-equity{grid-area:equity;}
+.tp-risks{grid-area:risks;} .tp-flow{grid-area:flow;}
+@media(max-width:1200px){ .tp-dash{grid-template-columns:1fr 1fr;
+  grid-template-areas:"nine score" "risks equity" "flow flow";} }
+@media(max-width:760px){ .tp-dash{grid-template-columns:1fr;
+  grid-template-areas:"nine" "score" "equity" "risks" "flow";} }
 .tp-panel{margin:0;min-width:0;}
 .tp-panel-title{margin:0 0 8px;font-size:1rem;}
-.tp-nav .ninebox{min-width:0;}
+/* Explorer 9-Box Navigator — dar sol panelde eksiksiz sığar (yatay scroll yok):
+   daha ince eksen + kompakt sabit hücre yüksekliği (~86px). Seçim/renk mantığı değişmez. */
+.tp-nav .ninebox{min-width:0;grid-template-columns:70px repeat(3,minmax(0,1fr));gap:6px;}
+.tp-nav .nb-cell{min-height:86px;padding:9px 10px;}
+.tp-nav .nb-cell .ct{font-size:1.4rem;}
 .tp-nav-note{margin-bottom:6px;}
 .tp-nav-summary{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
 .tp-stat{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
   padding:8px 10px;background:var(--bg-alt);border-radius:10px;font-size:.86rem;}
 .tp-stat b{font-size:1.05rem;font-variant-numeric:tabular-nums;}
 .tp-filters-head{font-weight:700;font-size:.9rem;margin:14px 0 4px;}
-.tp-filters-grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));}
+/* Explorer filtreleri — masaüstü 5 kolon (1.satır 5 / 2.satır 4); 1180 altı 4, 760 altı 1. */
+.tp-filters-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
+@media(max-width:1180px){ .tp-filters-grid{grid-template-columns:repeat(4,minmax(0,1fr));} }
+@media(max-width:760px){ .tp-filters-grid{grid-template-columns:1fr;} }
 .tp-context{margin:2px 0 10px;font-size:.9rem;}
 .tp-context-line b{color:var(--text);}
 .tp-context-mean{font-size:.82rem;margin-top:2px;}
@@ -245,8 +258,8 @@ select[multiple]{min-height:104px;}
    genişliğinde taşırmasın diye (grid blowout önleyici). #kalib_matrix (tam genişlik) için
    de nötr/güvenli — davranış değişmez. */
 .ninebox{display:grid;grid-template-columns:96px repeat(3,minmax(0,1fr));gap:8px;margin:8px 0;}
-/* Dar ekranda 9-Box kendi içinde yatay kaydırılır; sayfayı taşırmaz. */
-@media(max-width:640px){ .ninebox{min-width:520px;} }
+/* Dar ekranda 9-Box daha ince eksenle kendi genişliğine sığar (yatay scroll ÜRETİLMEZ). */
+@media(max-width:640px){ .ninebox{grid-template-columns:52px repeat(3,minmax(0,1fr));gap:6px;} }
 .nb-corner{}
 .nb-axis-x{text-align:center;font-weight:700;color:var(--text-2);font-size:.8rem;align-self:end;padding-bottom:4px;}
 .nb-axis-y{display:flex;align-items:center;justify-content:flex-end;font-weight:700;
