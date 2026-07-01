@@ -8,13 +8,21 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <!-- Uygulama çubuğu (düz, full-width, Eksim laciverti) -->
+  <header class="app-bar">
+    <div class="app-bar-inner">
+      <span class="app-wordmark">EKSİM</span>
+      <span class="app-bar-div" aria-hidden="true"></span>
+      <span class="app-name">Talent &amp; Succession</span>
+    </div>
+  </header>
+
+  <!-- Local navigation (JS sekmeleri #tabbar içine doldurur) -->
+  <nav class="app-nav" aria-label="Ekranlar">
+    <div id="tabbar"></div>
+  </nav>
+
   <div class="wrap">
-    <!-- Marka başlığı (JS doldurur) -->
-    <div id="brand"></div>
-
-    <!-- Sekme şeridi -->
-    <nav class="tabbar" id="tabbar" aria-label="Ekranlar"></nav>
-
     <!-- Aktif ekran içeriği -->
     <main id="view">
       <div class="loading">Veriler yükleniyor…</div>

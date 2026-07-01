@@ -5,9 +5,15 @@
 :root{
   --bg:#F4F5FB; --bg-alt:#EEF0F8; --card:#FFFFFF; --border:#E6E8F0;
   --text:#1F2440; --text-2:#5A6072;
-  --brand-1:#1E2A6B; --brand-2:#5B3FA8;
+  /* Eksim ana rengi lacivert; mor accent (--brand-2) app geneli laciverte çekildi. */
+  --brand-1:#1E2A6B; --brand-2:#1E2A6B;
   --radius:14px;
   --shadow:0 1px 3px rgba(20,24,60,.08), 0 1px 2px rgba(20,24,60,.04);
+
+  /* Eksim app-shell merkezi token seti */
+  --brand-navy:#1E2A6B; --brand-navy-dark:#16204F; --brand-navy-soft:#EAEEF8;
+  --surface:#FFFFFF; --surface-muted:#EEF0F8; --border-subtle:#E6E8F0;
+  --text-primary:#1F2440; --text-muted:#5A6072;
 
   /* Ton renkleri (theme.py TONES) — çizgi/metin + açık zemin */
   --danger:#DC2626;  --danger-bg:#FCECEC;
@@ -25,7 +31,10 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-size:15px; line-height:1.45;
 }
-.wrap{max-width:1600px;margin:0 auto;padding:1.1rem 1.2rem 3rem;}
+/* Header, navigation ve main aynı yatay container çizgisinde hizalanır (akışkan; çok geniş
+   monitörde sınırsız uzamaz, mobilde güvenli inset). */
+.wrap{width:min(calc(100% - 48px),1680px);margin:0 auto;padding:16px 0 3rem;}
+@media(max-width:760px){ .wrap{width:calc(100% - 24px);} }
 h1,h2,h3,h4{color:var(--text);letter-spacing:-.01em;margin:.2rem 0 .6rem;}
 h2{font-size:1.3rem;} h3{font-size:1.06rem;color:var(--text);}
 a{color:var(--brand-2);}
@@ -33,23 +42,29 @@ a{color:var(--brand-2);}
 .caption{color:var(--text-2);font-size:.82rem;margin:.3rem 0;}
 .hidden{display:none !important;}
 
-/* --- Marka başlığı (theme.brand_header) --- */
-.eks-brand{display:flex;justify-content:space-between;align-items:center;gap:16px;
-  flex-wrap:wrap;background:linear-gradient(100deg,var(--brand-1),var(--brand-2));
-  border-radius:var(--radius);padding:16px 22px;margin-bottom:14px;box-shadow:var(--shadow);}
-.eks-lockup{color:#fff;font-weight:800;letter-spacing:.14em;font-size:.82rem;opacity:.92;}
-.eks-product{color:#fff;font-weight:700;font-size:1.32rem;line-height:1.2;margin-top:2px;}
-.eks-sub{color:#dfe3ff;font-size:.86rem;margin-top:2px;}
-.eks-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
-.eks-chip{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.28);
-  border-radius:999px;padding:5px 12px;font-size:.76rem;font-weight:600;white-space:nowrap;}
+/* --- App bar (düz, full-width, Eksim laciverti; gradient/hero YOK) --- */
+.app-bar{background:var(--brand-navy);width:100%;}
+.app-bar-inner{width:min(calc(100% - 48px),1680px);margin:0 auto;height:62px;
+  display:flex;align-items:center;gap:14px;}
+.app-wordmark{color:#fff;font-weight:800;letter-spacing:.14em;font-size:1.05rem;}
+.app-bar-div{width:1px;height:22px;background:rgba(255,255,255,.32);flex:0 0 auto;}
+.app-name{color:#fff;font-weight:600;font-size:1rem;white-space:nowrap;}
 
-/* --- Sekme şeridi --- */
-.tabbar{display:flex;gap:4px;border-bottom:1px solid var(--border);flex-wrap:wrap;margin-bottom:16px;}
-.tabbar button{background:transparent;border:none;border-radius:10px 10px 0 0;
-  padding:9px 15px;color:var(--text-2);font-weight:600;font-size:.92rem;cursor:pointer;}
-.tabbar button:hover{background:var(--bg-alt);color:var(--text);}
-.tabbar button.active{color:var(--brand-2);background:#fff;border-bottom:2px solid var(--brand-2);}
+/* --- Local navigation (beyaz, sade, alt border; büyük pill YOK) --- */
+.app-nav{background:var(--surface);border-bottom:1px solid var(--border-subtle);width:100%;}
+.app-nav #tabbar,.app-nav-inner{width:min(calc(100% - 48px),1680px);margin:0 auto;
+  display:flex;gap:2px;flex-wrap:wrap;align-items:stretch;}
+#tabbar button{background:transparent;border:none;border-bottom:2px solid transparent;
+  border-radius:0;padding:14px 16px;color:var(--text-muted);font-weight:600;
+  font-size:.9rem;cursor:pointer;line-height:1.2;}
+#tabbar button:hover{color:var(--text-primary);background:var(--brand-navy-soft);}
+#tabbar button.active{color:var(--brand-navy);border-bottom-color:var(--brand-navy);
+  background:var(--brand-navy-soft);}
+@media(max-width:760px){
+  .app-bar-inner{width:calc(100% - 24px);}
+  .app-nav #tabbar,.app-nav-inner{width:calc(100% - 24px);}
+  #tabbar button{padding:11px 12px;font-size:.86rem;}
+}
 
 /* --- KPI kartı (theme.kpi_card) --- */
 .kpi-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:10px 0;}

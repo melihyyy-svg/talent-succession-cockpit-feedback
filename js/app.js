@@ -1,31 +1,14 @@
 /* app.js — önyükleme, marka başlığı, sekme yönlendirme. */
 
+/* Görünen label'lar sadeleştirildi; route id'leri (activate/deep-link/hash) DEĞİŞMEDİ. */
 const TABS = [
-  {id:"exec",     label:"Yönetici Karar Özeti", render:renderExec},
+  {id:"exec",     label:"Özet", render:renderExec},
   {id:"heatmap",  label:"Halefiyet Sağlığı", render:renderHeatmap},
-  {id:"detail",   label:"Pozisyon & Yedek Detayı", render:renderDetail},
-  {id:"talent",   label:"Talent Pool & 9-Box Explorer", render:renderTalent},
+  {id:"detail",   label:"Pozisyonlar", render:renderDetail},
+  {id:"talent",   label:"Talent Pool", render:renderTalent},
   {id:"discovery",label:"Aday Keşfi", render:renderDiscovery},
-  {id:"actions",  label:"Aksiyon Takip", render:renderActions},
+  {id:"actions",  label:"Aksiyonlar", render:renderActions},
 ];
-
-function renderBrand(){
-  const q = DATA.quality.counts;
-  document.getElementById("brand").innerHTML = `
-    <div class="eks-brand">
-      <div>
-        <div class="eks-lockup">EKSİM AKADEMİ</div>
-        <div class="eks-product">Talent &amp; Succession Cockpit</div>
-        <div class="eks-sub">Kritik pozisyon, yedeklilik ve aksiyon karar desteği ·
-          public geri bildirim demosu · salt-okunur</div>
-      </div>
-      <div class="eks-chips">
-        <span class="eks-chip">Salt-okunur kaynak</span>
-        <span class="eks-chip">Public demo</span>
-        <span class="eks-chip">Veri Kalitesi: ${q.error} hata · ${q.warning} uyarı · ${q.info} bilgi</span>
-      </div>
-    </div>`;
-}
 
 function renderTabs(active){
   const bar = document.getElementById("tabbar");
@@ -72,7 +55,6 @@ async function boot(){
     console.error(err);
     return;
   }
-  renderBrand();
   const initial = (location.hash || "").replace("#","");
   activate(TABS.some(t=>t.id===initial) ? initial : "exec");
 }
