@@ -37,7 +37,7 @@ function _renderDiscoveryFor(row, mount){
       if(key==="Rol_Kıdemi") return {key,label,fmt:v=>formatYears(v)};
       return {key,label,fmt:v=>disp(v)};
     });
-    backupBlock = buildTable(bcols, backups) +
+    backupBlock = `<div id="discovery_backups_table">${buildTable(bcols, backups)}</div>` +
       `<div class="caption">Not: Bu liste Talent Pool ile otomatik eşleştirilmez
        (doğrulanmış ortak anahtar yok).</div>`;
   }

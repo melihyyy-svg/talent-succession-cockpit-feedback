@@ -182,8 +182,10 @@ function renderExec(el){
     <section class="exec-section">
       <div class="section-head"><h3>3 · Kritik pozisyonlar — sonraki adım</h3>
         <span class="section-hint">ACİL + YÜKSEK öncelikli · ilk ${critical.length} / ${s.high_risk_count}</span></div>
-      ${critical.length ? buildTable(critCols, critical)
-        : emptyState("ACİL veya YÜKSEK riskli pozisyon yok.")}
+      <div id="exec_critical_table">
+        ${critical.length ? buildTable(critCols, critical)
+          : emptyState("ACİL veya YÜKSEK riskli pozisyon yok.")}
+      </div>
       ${s.high_risk_count>critical.length
         ? `<div class="caption">Tümü için yukarıdaki <b>Yüksek Risk</b> kartından inebilirsiniz.</div>`:""}
     </section>

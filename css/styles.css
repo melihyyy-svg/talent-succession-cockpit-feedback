@@ -150,7 +150,7 @@ table.data td.wrap-cell{white-space:normal;min-width:240px;max-width:420px;}
    Talent Pool Overview (sol 9-Box Navigator · sağ Talent Review Özeti) — tablo genişliğinde
    DEĞİL, kısa/karar odaklı. Altında tam genişlik Talent Pool Explorer.
    #talent_matrix / .table-scroll zaten overflow-x:auto (global taşma yok). */
-.tp-overview{display:grid;grid-template-columns:minmax(300px,360px) minmax(0,1fr);
+.tp-overview{display:grid;grid-template-columns:minmax(410px,460px) minmax(0,1fr);
   gap:16px;align-items:start;}
 @media(max-width:760px){ .tp-overview{grid-template-columns:1fr;} }
 .tp-panel{margin:0;}
@@ -184,7 +184,10 @@ select[multiple]{min-height:104px;}
 
 /* --- 9-Box matris --- */
 #talent_matrix,#kalib_matrix{overflow-x:auto;}
-.ninebox{display:grid;grid-template-columns:96px 1fr 1fr 1fr;gap:8px;margin:8px 0;}
+/* minmax(0,1fr) veri kolonları için: uzun hücre içeriği (etiket/sayı) grid'i tüm sayfa
+   genişliğinde taşırmasın diye (grid blowout önleyici). #kalib_matrix (tam genişlik) için
+   de nötr/güvenli — davranış değişmez. */
+.ninebox{display:grid;grid-template-columns:96px repeat(3,minmax(0,1fr));gap:8px;margin:8px 0;}
 /* Dar ekranda 9-Box kendi içinde yatay kaydırılır; sayfayı taşırmaz. */
 @media(max-width:640px){ .ninebox{min-width:520px;} }
 .nb-corner{}
@@ -562,3 +565,148 @@ td.wrap-cell .badge{margin:2px 4px 2px 0;}
 .succ-cmp{margin:6px 0 4px;}
 .succ-cmp table.data td{vertical-align:top;}
 .succ-cmp table.data td.wrap-cell{min-width:130px;}
+
+/* === Yatay taşma politikası (masaüstü) — tablo başına scoped table-layout:fixed +
+   kontrollü kolon genişliği. Global table.data kuralı DEĞİŞTİRİLMEDİ; her tablo kendi
+   scope'unda ele alınır. Amaç: container genişliğine sığdırmak (viewport taşması yok),
+   uzun metin KESİLMEZ — doğal olarak sarılır, satır gerektiğinde dikey büyür. Mevcut
+   wrap-cell / rationale-cell (Gerekçe önizleme+Detay) / compact-row davranışları korunur.
+   .table-scroll{overflow-x:auto} güvenlik ağı olarak kaldırılmadı (veri görünürlüğü). */
+
+/* --- Yönetici Karar Özeti: TIER1 ACİL/Yedeksiz/Ready-gap drill-down (#exec_drill, 9 kolon) --- */
+#exec_drill table.data{table-layout:fixed;width:100%;}
+#exec_drill table.data th,#exec_drill table.data td{white-space:normal;overflow-wrap:anywhere;}
+#exec_drill table.data thead th:nth-child(1){width:15%}
+#exec_drill table.data thead th:nth-child(2){width:19%}
+#exec_drill table.data thead th:nth-child(3){width:12%}
+#exec_drill table.data thead th:nth-child(4){width:10%}
+#exec_drill table.data thead th:nth-child(5){width:8%}
+#exec_drill table.data thead th:nth-child(6){width:10%}
+#exec_drill table.data thead th:nth-child(7){width:8%}
+#exec_drill table.data thead th:nth-child(8){width:9%}
+#exec_drill table.data thead th:nth-child(9){width:9%}
+
+/* --- Yönetici Karar Özeti: TIER3 kritik pozisyonlar (#exec_critical_table, 5 kolon) --- */
+#exec_critical_table table.data{table-layout:fixed;width:100%;}
+#exec_critical_table table.data thead th:nth-child(1){width:34%}
+#exec_critical_table table.data thead th:nth-child(2){width:16%}
+#exec_critical_table table.data thead th:nth-child(3){width:20%}
+#exec_critical_table table.data thead th:nth-child(4){width:16%}
+#exec_critical_table table.data thead th:nth-child(5){width:14%}
+
+/* --- Yönetici Karar Özeti: TIER4 Açık Halefiyet Riskleri karar kuyruğu (#rq_table, 5 kolon) --- */
+#rq_table table.data{table-layout:fixed;width:100%;}
+#rq_table table.data thead th:nth-child(1){width:32%}
+#rq_table table.data thead th:nth-child(2){width:16%}
+#rq_table table.data thead th:nth-child(3){width:26%}
+#rq_table table.data thead th:nth-child(4){width:12%}
+#rq_table table.data thead th:nth-child(5){width:14%}
+
+/* --- Talent Pool Explorer (#talent_table, 16 kolon; kompakt satır + Gerekçe önizleme korunur) --- */
+#talent_table table.data{table-layout:fixed;width:100%;}
+#talent_table table.data th,#talent_table table.data td{white-space:normal;overflow-wrap:anywhere;}
+#talent_table table.data thead th:nth-child(1){width:5%}
+#talent_table table.data thead th:nth-child(2){width:8%}
+#talent_table table.data thead th:nth-child(3){width:5%}
+#talent_table table.data thead th:nth-child(4){width:7%}
+#talent_table table.data thead th:nth-child(5){width:8%}
+#talent_table table.data thead th:nth-child(6){width:5%}
+#talent_table table.data thead th:nth-child(7){width:5%}
+#talent_table table.data thead th:nth-child(8){width:5%}
+#talent_table table.data thead th:nth-child(9){width:6%}
+#talent_table table.data thead th:nth-child(10){width:5%}
+#talent_table table.data thead th:nth-child(11){width:5%}
+#talent_table table.data thead th:nth-child(12){width:6%}
+#talent_table table.data thead th:nth-child(13){width:7%}
+#talent_table table.data thead th:nth-child(14){width:7%}
+#talent_table table.data thead th:nth-child(15){width:8%}
+#talent_table table.data thead th:nth-child(16){width:8%}
+
+/* --- Aday Keşfi sonuç tablosu (#discovery_table, 19 kolon; Gerekçe önizleme korunur) --- */
+#discovery_table table.data{table-layout:fixed;width:100%;}
+#discovery_table table.data th,#discovery_table table.data td{
+  white-space:normal;overflow-wrap:anywhere;padding:6px 8px;}
+#discovery_table table.data thead th:nth-child(1){width:4%}
+#discovery_table table.data thead th:nth-child(2){width:7%}
+#discovery_table table.data thead th:nth-child(3){width:4%}
+#discovery_table table.data thead th:nth-child(4){width:6%}
+#discovery_table table.data thead th:nth-child(5){width:6%}
+#discovery_table table.data thead th:nth-child(6){width:7%}
+#discovery_table table.data thead th:nth-child(7){width:4%}
+#discovery_table table.data thead th:nth-child(8){width:4%}
+#discovery_table table.data thead th:nth-child(9){width:4%}
+#discovery_table table.data thead th:nth-child(10){width:5%}
+#discovery_table table.data thead th:nth-child(11){width:4%}
+#discovery_table table.data thead th:nth-child(12){width:4%}
+#discovery_table table.data thead th:nth-child(13){width:5%}
+#discovery_table table.data thead th:nth-child(14){width:6%}
+#discovery_table table.data thead th:nth-child(15){width:6%}
+#discovery_table table.data thead th:nth-child(16){width:7%}
+#discovery_table table.data thead th:nth-child(17){width:6%}
+#discovery_table table.data thead th:nth-child(18){width:4%}
+#discovery_table table.data thead th:nth-child(19){width:4%}
+
+/* --- Aday Keşfi: mevcut tanımlı yedekler tablosu (#discovery_backups_table, 13 kolon) --- */
+#discovery_backups_table table.data{table-layout:fixed;width:100%;}
+#discovery_backups_table table.data th,#discovery_backups_table table.data td{
+  white-space:normal;overflow-wrap:anywhere;}
+#discovery_backups_table table.data thead th:nth-child(1){width:10%}
+#discovery_backups_table table.data thead th:nth-child(2){width:12%}
+#discovery_backups_table table.data thead th:nth-child(3){width:8%}
+#discovery_backups_table table.data thead th:nth-child(4){width:7%}
+#discovery_backups_table table.data thead th:nth-child(5){width:9%}
+#discovery_backups_table table.data thead th:nth-child(6){width:6%}
+#discovery_backups_table table.data thead th:nth-child(7){width:7%}
+#discovery_backups_table table.data thead th:nth-child(8){width:8%}
+#discovery_backups_table table.data thead th:nth-child(9){width:8%}
+#discovery_backups_table table.data thead th:nth-child(10){width:8%}
+#discovery_backups_table table.data thead th:nth-child(11){width:6%}
+#discovery_backups_table table.data thead th:nth-child(12){width:6%}
+#discovery_backups_table table.data thead th:nth-child(13){width:5%}
+
+/* --- Pozisyon Karar Dosyası: Halef Karşılaştırması (.succ-cmp, 9 kolon) --- */
+.succ-cmp table.data{table-layout:fixed;width:100%;}
+.succ-cmp table.data thead th:nth-child(1){width:14%}
+.succ-cmp table.data thead th:nth-child(2){width:16%}
+.succ-cmp table.data thead th:nth-child(3){width:9%}
+.succ-cmp table.data thead th:nth-child(4){width:9%}
+.succ-cmp table.data thead th:nth-child(5){width:9%}
+.succ-cmp table.data thead th:nth-child(6){width:8%}
+.succ-cmp table.data thead th:nth-child(7){width:11%}
+.succ-cmp table.data thead th:nth-child(8){width:11%}
+.succ-cmp table.data thead th:nth-child(9){width:13%}
+
+/* --- Pozisyon Karar Dosyası: Risk gerekçeleri F1-F5 tablosu (.ex-body, 3 kolon) --- */
+.ex-body table.data{table-layout:fixed;width:100%;}
+.ex-body table.data th,.ex-body table.data td{white-space:normal;overflow-wrap:anywhere;}
+.ex-body table.data thead th:nth-child(1){width:22%}
+.ex-body table.data thead th:nth-child(2){width:10%}
+.ex-body table.data thead th:nth-child(3){width:68%}
+
+/* --- Aksiyon Takip tablosu (#action_table, 9 kolon; Önerilen Aksiyon/Gerekçe zaten wrap-cell) --- */
+#action_table table.data{table-layout:fixed;width:100%;}
+#action_table table.data thead th:nth-child(1){width:12%}
+#action_table table.data thead th:nth-child(2){width:10%}
+#action_table table.data thead th:nth-child(3){width:8%}
+#action_table table.data thead th:nth-child(4){width:12%}
+#action_table table.data thead th:nth-child(5){width:8%}
+#action_table table.data thead th:nth-child(6){width:10%}
+#action_table table.data thead th:nth-child(7){width:8%}
+#action_table table.data thead th:nth-child(8){width:16%}
+#action_table table.data thead th:nth-child(9){width:16%}
+
+/* --- Mobil: fixed kolon genişliği dar viewport'ta kolonları okunamaz hâle getirir;
+   mevcut/kanıtlanmış .table-scroll{overflow-x:auto} mobil yedeğine geri dönülür (yeni
+   kart/stack render fonksiyonu eklenmez — üst kapsam kısıtı: yeni fonksiyon yok). Global
+   sayfa taşması yok; kaydırma yalnızca ilgili tablo container'ı içinde kalır. */
+@media(max-width:760px){
+  #exec_drill table.data,
+  #exec_critical_table table.data,
+  #rq_table table.data,
+  #talent_table table.data,
+  #discovery_table table.data,
+  #discovery_backups_table table.data,
+  .succ-cmp table.data,
+  .ex-body table.data,
+  #action_table table.data{table-layout:auto;}
+}
