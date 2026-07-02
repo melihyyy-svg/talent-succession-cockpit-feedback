@@ -3,7 +3,7 @@
 /* Görünen label'lar sadeleştirildi; route id'leri (activate/deep-link/hash) DEĞİŞMEDİ. */
 const TABS = [
   {id:"exec",     label:"Özet", render:renderExec},
-  {id:"heatmap",  label:"Halefiyet Sağlığı", render:renderHeatmap},
+  {id:"heatmap",  label:"Yedekleme Sağlığı", render:renderHeatmap},
   {id:"detail",   label:"Pozisyonlar", render:renderDetail},
   {id:"talent",   label:"Talent Pool", render:renderTalent},
   {id:"discovery",label:"Aday Keşfi", render:renderDiscovery},

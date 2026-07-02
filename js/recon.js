@@ -39,8 +39,8 @@ function reconciliationChecks(){
   // 6) 9-Box matris toplamı = Talent Pool kapsamı (KAPSAM bazlı; tüm pop. değil)
   add("9-Box matris toplamı = Talent Pool kapsamı (216)", T.length, matrix.total);
 
-  // 7) Ready-now açığı iki bağımsız yoldan aynı olmalı
-  add("Ready-now açığı (iki yol tutarlı)", rn.gap, positionsReadyGap().length);
+  // 7) Göreve Hazır Yedek Açığı iki bağımsız yoldan aynı olmalı
+  add("Göreve Hazır Yedek Açığı (iki yol tutarlı)", rn.gap, positionsReadyGap().length);
 
   // 8) Öncelik listesi (ACİL+YÜKSEK) = aciliyet sayımı
   add("ACİL+YÜKSEK öncelik listesi = aciliyet sayımı", s.acil + s.yuksek, acilYuksekTop(P, 0).length);
@@ -77,34 +77,34 @@ function relationshipIntegrityChecks(){
   const evetNoLink = P.filter(p => hasBackup(p) && lookupBackups(p["İsim"]).length === 0);
   // 5) Yedek_Var=Hayır ama eşleşen yedek ilişkisi VAR
   const hayirHasLink = P.filter(p => !hasBackup(p) && lookupBackups(p["İsim"]).length > 0);
-  // 6) Ready-now hesabına giren (HAZIR) ama pozisyon bağlantısı belirsiz (çok-eşleşen) yedek
+  // 6) Göreve Hazır hesabına giren (HAZIR) ama pozisyon bağlantısı belirsiz (çok-eşleşen) yedek
   const ambiguousReady = B.filter(b =>
     isReadyBackup(b) && (isimToPos[nvOwner(b)] || []).length > 1);
-  // 7) Yeni/eşlenmemiş Yedek_Tipi (Ready-now sınıflamasına giren ham değer)
+  // 7) Yeni/eşlenmemiş Yedek_Tipi (Göreve Hazır sınıflamasına giren ham değer)
   const unmappedKeys = Object.keys(unmappedYedekTipi());
 
   const checks = [
     {name:"Boş/geçersiz normalize Pozisyon_Sahibi (yedek)", expected:0,
      actual:blankOwner.length,
-     impact:"Bu yedekler hiçbir pozisyona bağlanamaz; Ready-now hesabı dışında kalır."},
+     impact:"Bu yedekler hiçbir pozisyona bağlanamaz; Göreve Hazır hesabı dışında kalır."},
     {name:"Aynı normalize isimle >1 pozisyon sahibi (isim-anahtarı çakışması)", expected:0,
      actual:dupNames.length, sample:dupNames.map(([k])=>k).slice(0,8),
-     impact:"İsim-anahtarı belirsizleşir; Ready-now yanlış pozisyona atfedilebilir (en yüksek risk)."},
+     impact:"İsim-anahtarı belirsizleşir; Göreve Hazır Yedek yanlış pozisyona atfedilebilir (en yüksek risk)."},
     {name:"Pozisyon kaydı olmadan kalan yedek (orphan)", expected:0, actual:orphan.length,
      sample:[...new Set(orphan.map(b=>b["Pozisyon_Sahibi"]))].slice(0,8),
-     impact:"Bu yedekler hiçbir pozisyonun Ready-now hesabına girmez."},
+     impact:"Bu yedekler hiçbir pozisyonun Göreve Hazır hesabına girmez."},
     {name:"Yedek_Var=Evet olduğu hâlde eşleşen yedek ilişkisi yok", expected:0,
      actual:evetNoLink.length, sample:evetNoLink.map(p=>p["İsim"]).slice(0,8),
-     impact:"Kapsam bayrağı ile ilişki tutarsız; Ready-now bu pozisyonu eksik değerlendirebilir."},
+     impact:"Kapsam bayrağı ile ilişki tutarsız; Göreve Hazır bu pozisyonu eksik değerlendirebilir."},
     {name:"Yedek_Var=Hayır olduğu hâlde eşleşen yedek ilişkisi var", expected:0,
      actual:hayirHasLink.length, sample:hayirHasLink.map(p=>p["İsim"]).slice(0,8),
      impact:"Kapsam bayrağı ile ilişki tutarsız; kayıt gözden geçirilmeli."},
-    {name:"Ready-now'a giren ama pozisyon bağlantısı belirsiz (HAZIR) yedek", expected:0,
+    {name:"Göreve Hazır'a giren ama pozisyon bağlantısı belirsiz (HAZIR) yedek", expected:0,
      actual:ambiguousReady.length,
-     impact:"Belirsiz bağlantı doğrudan Ready-now sayımını bozabilir; öncelikli incelenmeli."},
+     impact:"Belirsiz bağlantı doğrudan Göreve Hazır sayımını bozabilir; öncelikli incelenmeli."},
     {name:"Yeni/eşlenmemiş Yedek_Tipi değeri", expected:0, actual:unmappedKeys.length,
      sample:unmappedKeys.slice(0,8),
-     impact:"Eşlenmemiş tip Ready-now DIŞI sayılır; allowlist gözden geçirilmeli."},
+     impact:"Eşlenmemiş tip Göreve Hazır DIŞI sayılır; allowlist gözden geçirilmeli."},
   ].map(c => ({...c, ok: c.actual === c.expected}));
 
   return {checks};
@@ -140,8 +140,8 @@ function heatmapReconChecks(){
   const checks = [
     {name:"Hücre toplam pozisyon = toplam pozisyon", expected:P.length, actual:cellTotal},
     {name:"Her pozisyon tam 1 hücreye atandı", expected:P.length, actual:assigned},
-    {name:"Kritik Ready-now açığı toplamı = global", expected:rn.gap, actual:gapSum},
-    {name:"Ready-now olan pozisyon toplamı = global", expected:rn.coverage, actual:readySum},
+    {name:"Kritik Göreve Hazır Yedek Açığı toplamı = global", expected:rn.gap, actual:gapSum},
+    {name:"Göreve Hazır olan pozisyon toplamı = global", expected:rn.coverage, actual:readySum},
     {name:"Tanımlı yedeği olmayan toplam = global", expected:s.coverage_absent, actual:nbSum},
     {name:"Yüksek risk (ACİL+YÜKSEK) toplamı = global", expected:s.high_risk_count, actual:highSum},
   ].map(c => ({...c, ok: c.actual === c.expected}));

@@ -85,14 +85,14 @@ function renderQuality(el){
   const reconNote = failCount>0
     ? note("err", `<b>${failCount} mutabakat sapması</b> — kaynak ile cockpit görünümü tutarsız.`)
     : (warnCount>0
-        ? note("warn", `<b>${warnCount} uyarı</b> — eşlenmemiş Yedek_Tipi değer(ler)i var (Ready-now dışı sayıldı).`)
+        ? note("warn", `<b>${warnCount} uyarı</b> — eşlenmemiş Yedek_Tipi değer(ler)i var (Göreve Hazır dışı sayıldı).`)
         : note("ok", "Tüm mutabakat kontrolleri tutarlı (kaynak ↔ cockpit)."));
   const reconBlock = `<h3>Kaynak ↔ Cockpit Mutabakatı</h3>
     ${reconNote}${reconTable}
     <div class="caption">9-Box toplamı tüm popülasyona zorla eşitlenmez; ekran kapsamı
-      (Talent Pool) esas alınır. Ready-now açığı iki bağımsız hesap yolundan doğrulanır.</div>`;
+      (Talent Pool) esas alınır. Göreve Hazır Yedek Açığı iki bağımsız hesap yolundan doğrulanır.</div>`;
 
-  // --- Faz 1.1: Ready-now İlişki Anahtarı Bütünlüğü ---
+  // --- Faz 1.1: Göreve Hazır İlişki Anahtarı Bütünlüğü ---
   const integ = relationshipIntegrityChecks();
   const integFail = integ.checks.filter(c => !c.ok).length;
   const integRows = integ.checks.map(c => ({
@@ -111,12 +111,12 @@ function renderQuality(el){
     {key:"Örnek",label:"Örnek",cls:"wrap-cell"},
   ], integRows);
   const integNote = integFail>0
-    ? note("warn", `<b>${integFail} ilişki bütünlüğü uyarısı</b> — Ready-now hesaplarının
+    ? note("warn", `<b>${integFail} ilişki bütünlüğü uyarısı</b> — Göreve Hazır hesaplarının
         dayandığı <code>Pozisyon_Sahibi → İsim</code> anahtarında tutarsızlık var; etkilenen
         kayıtları gözden geçirin (otomatik düzeltme YAPILMAZ).`)
-    : note("ok", `Ready-now ilişki anahtarı bütünlüğü: tüm kontroller tutarlı
+    : note("ok", `Göreve Hazır ilişki anahtarı bütünlüğü: tüm kontroller tutarlı
         (${integ.checks.length}/${integ.checks.length}).`);
-  // --- Halefiyet Sağlığı (Firma × Seviye) agregasyon mutabakatı ---
+  // --- Yedekleme Sağlığı (Firma × Seviye) agregasyon mutabakatı ---
   const heat = heatmapReconChecks();
   const heatFail = heat.checks.filter(c => !c.ok).length;
   const heatRows = heat.checks.map(c => ({
@@ -128,15 +128,15 @@ function renderQuality(el){
     {key:"Beklenen",label:"Beklenen"},{key:"Gerçekleşen",label:"Gerçekleşen"},
     {key:"Sonuç",label:"Sonuç",rawFmt:v=>badge(v[0],v[1])},
   ], heatRows);
-  const heatBlock = `<h3>Halefiyet Sağlığı Agregasyon Mutabakatı</h3>
+  const heatBlock = `<h3>Yedekleme Sağlığı Agregasyon Mutabakatı</h3>
     ${heatFail>0
       ? note("err", `<b>${heatFail} sapma</b> — Firma×Seviye gruplaması global toplamlarla tutarsız.`)
       : note("ok", `Firma×Seviye (${heat.cellCount} grup) agregasyonu global toplamlarla tutarlı
           (${heat.checks.length}/${heat.checks.length}).`)}
     ${heatTable}`;
 
-  const integBlock = `<h3>Ready-now İlişki Anahtarı Bütünlüğü</h3>
-    ${note("info", `Ready-now hesapları <code>Pozisyon_Sahibi → İsim</code> isim-anahtarına
+  const integBlock = `<h3>Göreve Hazır İlişki Anahtarı Bütünlüğü</h3>
+    ${note("info", `Göreve Hazır hesapları <code>Pozisyon_Sahibi → İsim</code> isim-anahtarına
       dayanır (kaynakta benzersiz Sicil No yoktur). Aşağıdaki kontroller bu anahtarı <b>aktif</b>
       olarak izler. Hiçbir kayıt otomatik düzeltilmez/eşleştirilmez; fuzzy matching yoktur;
       hesaplama mantığı değişmez — uyarılar yalnızca görünür kılınır.`)}

@@ -9,13 +9,13 @@ const SEVIYE_ORDER = ["Başkan / GM", "Direktör / GMY", "Müdür"];
 /* Lens tanımları — her biri mevcut bir yüklemin grup içi sayımıdır. */
 const HEAT_LENSES = {
   gap: {
-    label:"Kritik Ready-now Açığı", unit:"kritik açık", higherWorse:true,
-    desc:"ACİL veya YÜKSEK olup Ready-now halefi bulunmayan pozisyonların oranı ve sayısı.",
+    label:"Kritik Göreve Hazır Yedek Açığı", unit:"kritik açık", higherWorse:true,
+    desc:"ACİL veya YÜKSEK olup Göreve Hazır Yedeği bulunmayan pozisyonların oranı ve sayısı.",
     metric:p => C.HIGH_RISK.includes(String(p[C.URGENCY]).trim()) && !positionHasReady(p),
   },
   coverage: {
-    label:"Ready-now Coverage", unit:"korunaklı", higherWorse:false,
-    desc:"En az bir Ready-now halefi bulunan pozisyonların oranı.",
+    label:"Göreve Hazır Coverage", unit:"korunaklı", higherWorse:false,
+    desc:"En az bir Göreve Hazır Yedeği bulunan pozisyonların oranı.",
     metric:p => positionHasReady(p),
   },
   nobackup: {
@@ -102,13 +102,13 @@ function renderHeatmap(el){
   el.innerHTML = `
     <header class="exec-head">
       <div class="exec-head-main">
-        <div class="exec-eyebrow">HALEFİYET SAĞLIĞI</div>
-        <h2 class="exec-title">Halefiyet Sağlığı Isı Haritası</h2>
-        <p class="exec-lede">Risk ve hazır halef açığının şirket ve seviye bazında
+        <div class="exec-eyebrow">YEDEKLEME SAĞLIĞI</div>
+        <h2 class="exec-title">Yedekleme Sağlığı Isı Haritası</h2>
+        <p class="exec-lede">Risk ve Göreve Hazır Yedek açığının şirket ve seviye bazında
           yoğunlaştığı alanları inceleyin.</p>
       </div>
     </header>
-    ${note("info", `Bu görünüm mevcut risk, aciliyet, tanımlı yedek ve Ready-now verilerinin
+    ${note("info", `Bu görünüm mevcut risk, aciliyet, tanımlı yedek ve Göreve Hazır verilerinin
       şirket/seviye bazında gruplanmış özetidir. Gizli bileşik skor üretilmez; gerçek N+1 /
       raporlama hattı gösterilmez. Nihai değerlendirme yönetici ve İK kalibrasyonunda yapılır.`)}
 
@@ -222,7 +222,7 @@ function renderHeatmap(el){
         {key:"f",label:"Firma",fmt:v=>v},
         {key:"s",label:"Seviye",fmt:v=>v},
         {key:"gap",label:"Kritik açık / toplam",rawFmt:(v,r)=>`${r.gap} / ${r.st.total}`},
-        {key:"cov",label:"Ready-now coverage",rawFmt:(v,r)=>`${r.ready}/${r.st.total} · %${trPct(100*(r.st.total?r.ready/r.st.total:0))}`},
+        {key:"cov",label:"Göreve Hazır coverage",rawFmt:(v,r)=>`${r.ready}/${r.st.total} · %${trPct(100*(r.st.total?r.ready/r.st.total:0))}`},
         {key:"nb",label:"Tanımlı yedek açığı",rawFmt:(v,r)=>`${r.nb}`},
         {key:"act",label:"",rawFmt:(v,r)=>`<button class="btn secondary small" data-firma="${esc(r.f)}" data-seviye="${esc(r.s)}" data-rep="${_repIndex(r.g)}">Pozisyonları incele →</button>`},
       ];

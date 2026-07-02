@@ -14,9 +14,9 @@ function _ensureDrawer(){
   if(document.getElementById("succ_overlay")) return;
   const wrap = document.createElement("div");
   wrap.innerHTML = `<div class="succ-overlay" id="succ_overlay" hidden>
-      <aside class="succ-drawer" id="succ_drawer" role="dialog" aria-modal="true" aria-label="Hızlı Halef Kartı">
+      <aside class="succ-drawer" id="succ_drawer" role="dialog" aria-modal="true" aria-label="Hızlı Yedek Kartı">
         <div class="sd-head">
-          <div><div class="sd-eyebrow">HIZLI HALEF KARTI</div>
+          <div><div class="sd-eyebrow">HIZLI YEDEK KARTI</div>
             <div class="sd-target" id="sd_target"></div></div>
           <button class="sd-close" id="sd_close" aria-label="Kapat" title="Kapat (Esc)">✕</button>
         </div>
@@ -51,7 +51,7 @@ function _renderDrawer(){
   const nav = document.getElementById("sd_nav");
   nav.innerHTML = _currentBackups.length > 1
     ? `<button class="btn secondary small" id="sd_prev" ${_drawerIdx===0?"disabled":""}>‹ Önceki</button>
-       <span class="sd-count">${_drawerIdx+1} / ${_currentBackups.length} halef</span>
+       <span class="sd-count">${_drawerIdx+1} / ${_currentBackups.length} yedek</span>
        <button class="btn secondary small" id="sd_next" ${_drawerIdx===_currentBackups.length-1?"disabled":""}>Sonraki ›</button>`
     : "";
   const assess = isBlank(b["Yedek_Assess"]) ? "Kaynakta belirtilmedi" : trNumber(b["Yedek_Assess"],2);
@@ -59,14 +59,14 @@ function _renderDrawer(){
   const ev = successorEvidence(b);
   const mr = multiRoleCandidacy(b["Yedek_İsim"]);
   const evSummary = ev.missing.length === 0
-    ? "Bu halef readiness (yedek tipi), performans, 9-Box ve uyum verisiyle değerlendirilebilir görünüyor."
-    : `Bu halef readiness (yedek tipi) ve uyum verisiyle görünür; eksik kanıt: ${ev.missing.join(", ")}.`;
+    ? "Bu yedek readiness (yedek tipi), performans, 9-Box ve uyum verisiyle değerlendirilebilir görünüyor."
+    : `Bu yedek readiness (yedek tipi) ve uyum verisiyle görünür; eksik kanıt: ${ev.missing.join(", ")}.`;
   const evidenceBlock = `<div class="evidence">
-    <div class="ev-h">Halefiyet Karar Kanıtı</div>
+    <div class="ev-h">Yedekleme Karar Kanıtı</div>
     <div class="ev-summary">${esc(evSummary)}</div>
     <div class="ev-line">Kanıt kaynakları: <b>${ev.sources.length ? esc(ev.sources.join(", ")) : "Veri eksik"}</b></div>
     <div class="ev-line">Son kalibrasyon / değerlendirme tarihi: <b>Kalibrasyon tarihi yok</b></div>
-    <div class="ev-line">Mevcut halefiyet sırası: <b>Kayıt bulunmuyor</b></div>
+    <div class="ev-line">Mevcut yedekleme sırası: <b>Kayıt bulunmuyor</b></div>
     ${mr.roleCount > 1 ? `<div class="ev-line">${badge(mr.roleCount+" kritik rol için aday","warning")}</div>` : ""}
     <div class="ev-note">Bu özet yalnızca mevcut verileri görünür kılar; yeni puan/öneri üretmez.</div>
   </div>`;
@@ -76,7 +76,7 @@ function _renderDrawer(){
     ${_kvRow("Yedek firma", esc(_dispSrc(b["Yedek_Firma"])))}
     ${_kvRow("Yedek şehir", esc(_dispSrc(b["Yedek_Şehir"])))}
     ${_kvRow("Yedek tipi", esc(_dispSrc(b["Yedek_Tipi"])))}
-    ${_kvRow("Ready-now durumu", badge(ready?"Hazır":"Hazırlanıyor / değil", ready?"success":"warning"))}
+    ${_kvRow("Göreve Hazır durumu", badge(ready?"Hazır":"Hazırlanıyor / değil", ready?"success":"warning"))}
     ${_kvRow("Assessment", `<b>${esc(assess)}</b>`)}
     ${_kvRow("Performans", esc(_dispSrc(b["Yedek_Perf"])))}
     ${_kvRow("9-Box", badge(_dispSrc(b["Yedek_9Box"]), nineboxTone(b["Yedek_9Box"])))}
@@ -131,7 +131,7 @@ function _positionStatus(row){
   if(ready) return {label:"Korunaklı", tone:"success"};
   if(high) return {label:"Kritik Açık", tone:"danger"};
   if(!has) return {label:"Yedeksiz", tone:"neutral"};
-  return {label:"Hazır Halef Açığı", tone:"warning"};
+  return {label:"Göreve Hazır Yedek Açığı", tone:"warning"};
 }
 
 /* Bu pozisyona bağlı yedekler (mevcut ilişki) ve Ready-now alt kümesi. */
@@ -147,7 +147,7 @@ function _positionBackups(isim){
 function _benchStrip(bk){
   if(!bk.all.length){
     return `<div class="bench-strip empty">
-      <span class="bench-h">Halef Havuzu Gücü</span>
+      <span class="bench-h">Yedek Havuzu Gücü</span>
       <span class="bench-empty">Tanımlı yedek bulunmuyor.</span></div>`;
   }
   const chips = bk.ready.length
@@ -155,7 +155,7 @@ function _benchStrip(bk){
         `<span class="bench-chip">${esc(disp(b["Yedek_İsim"]))}</span>`).join("")}</div>`
     : "";
   return `<div class="bench-strip">
-    <span class="bench-h">Halef Havuzu Gücü</span>
+    <span class="bench-h">Yedek Havuzu Gücü</span>
     <span class="bench-stat ${bk.ready.length?"ready":""}"><b>${bk.ready.length}</b> Hazır Şimdi</span>
     <span class="bench-stat"><b>${bk.prep.length}</b> Diğer Aday</span>
     <span class="bench-stat"><b>${bk.all.length}</b> Toplam Aday</span>
@@ -180,8 +180,8 @@ function _successorComparison(row){
     {key:"func",label:"Fonksiyonel uyum",fmt:v=>de(v)},
     {key:"missing",label:"Eksik kanıt",cls:"wrap-cell",rawFmt:v=>v.length?esc(v.join(", ")):"—"},
   ];
-  return `<div class="section-head" style="margin-top:18px"><h3>Halef Karşılaştırması</h3></div>
-    <div class="caption">Aynı role aday halefler mevcut kaynak verisiyle yan yana; kaynak sırası
+  return `<div class="section-head" style="margin-top:18px"><h3>Yedek Karşılaştırması</h3></div>
+    <div class="caption">Aynı role aday yedekler mevcut kaynak verisiyle yan yana; kaynak sırası
       korunur, "en iyi / önerilen aday" veya toplam puan üretilmez. Eksik alanlar "Veri eksik".</div>
     <div class="succ-cmp">${buildTable(cols, rows)}</div>`;
 }
@@ -191,9 +191,9 @@ function _decisionHeader(row, st, bk){
   const aci = disp(row["Aciliyet_Final"]);
   let summary;
   if(bk.ready.length) summary = `Bu pozisyon <b>${esc(aci)}</b> aciliyet seviyesinde ve `
-    + `<b>${bk.ready.length} hazır halefi</b> bulunuyor.`;
+    + `<b>${bk.ready.length} Göreve Hazır Yedeği</b> bulunuyor.`;
   else if(bk.all.length) summary = `Bu pozisyon <b>${esc(aci)}</b> aciliyet seviyesinde; `
-    + `<b>${bk.all.length} tanımlı yedeği</b> var ancak <b>hazır halefi bulunmuyor</b>.`;
+    + `<b>${bk.all.length} tanımlı yedeği</b> var ancak <b>Göreve Hazır Yedeği bulunmuyor</b>.`;
   else summary = `Bu pozisyon <b>${esc(aci)}</b> aciliyet seviyesinde ve `
     + `<b>tanımlı yedeği bulunmuyor</b>.`;
   return `<div class="pdh">
@@ -247,18 +247,18 @@ function _successionModule(row, st, bk){
   const gap = (bk.all.length>0 && bk.ready.length===0) ? "Evet"
             : (bk.ready.length>0 ? "Hayır" : "Tanımlı yedek yok");
   return `<div class="panel decision-mod">
-    <h4>Halefiyet Sağlığı</h4>
+    <h4>Yedekleme Sağlığı</h4>
     <div class="kv">
       <div><span>Tanımlı yedek</span><b>${bk.all.length}</b></div>
-      <div><span>Ready-now halef</span><b>${bk.ready.length}</b></div>
+      <div><span>Göreve Hazır Yedek</span><b>${bk.ready.length}</b></div>
       <div><span>Yedek kapsama</span>${badge(has?"Var":"Yok", has?"success":"danger")}</div>
-      <div><span>Ready-now durumu</span>${badge(bk.ready.length?"Var":"Yok", bk.ready.length?"success":"warning")}</div>
-      <div><span>Hazır halef açığı</span><b>${esc(gap)}</b></div>
+      <div><span>Göreve Hazır durumu</span>${badge(bk.ready.length?"Var":"Yok", bk.ready.length?"success":"warning")}</div>
+      <div><span>Göreve Hazır Yedek Açığı</span><b>${esc(gap)}</b></div>
       <div><span>Durum</span>${badge(st.label, st.tone)}</div>
     </div>
     <div class="cov-gap" style="margin-top:10px">
-      <b>Tanımlı yedek bulunması ≠ Hazır halef bulunması.</b>
-      ${bk.all.length} tanımlı yedek · ${bk.ready.length} hazır halef
+      <b>Tanımlı yedek bulunması ≠ Göreve Hazır Yedek bulunması.</b>
+      ${bk.all.length} tanımlı yedek · ${bk.ready.length} Göreve Hazır Yedek
       (YETENEK HAZIR / DOĞAL + HAZIR).</div>
   </div>`;
 }
@@ -267,9 +267,9 @@ function _successionModule(row, st, bk){
 function _backupCard(b, idx){
   const ready = isReadyBackup(b);
   return `<div class="bk-card t-${ready?"success":"neutral"}" data-bk="${idx}" role="button"
-       tabindex="0" aria-label="${esc(disp(b["Yedek_İsim"]))} — hızlı halef kartını aç">
+       tabindex="0" aria-label="${esc(disp(b["Yedek_İsim"]))} — hızlı yedek kartını aç">
     <div class="bk-head"><b>${esc(disp(b["Yedek_İsim"]))}</b>
-      ${badge(ready?"Ready-now (Hazır)":"Hazırlanıyor / değil", ready?"success":"warning")}</div>
+      ${badge(ready?"Göreve Hazır":"Hazırlanıyor / değil", ready?"success":"warning")}</div>
     ${_multiRoleBadge(b["Yedek_İsim"])}
     <div class="bk-sub">${esc(_dispSrc(b["Yedek_Görev"]))} · ${esc(_dispSrc(b["Yedek_Firma"]))} ·
       ${esc(_dispSrc(b["Yedek_Şehir"]))}</div>
@@ -283,7 +283,7 @@ function _backupCard(b, idx){
       <span>Ayrılma riski: <b>${esc(_dispSrc(b["Ayrılma_Riski"]))}</b></span>
       <span>Çoklu yedek: <b>${esc(_dispSrc(b["Çoklu_Yedek"]))}</b></span>
     </div>
-    <div class="bk-open">Hızlı halef kartı →</div></div>`;
+    <div class="bk-open">Hızlı yedek kartı →</div></div>`;
 }
 
 function _backupComparison(bk){
@@ -297,12 +297,12 @@ function _backupComparison(bk){
   const readyCards = bk.ready.map(b => _backupCard(b, k++)).join("");
   const prepCards = bk.prep.map(b => _backupCard(b, k++)).join("");
   const readyBlock = bk.ready.length
-    ? `<div class="bk-group-h">Ready-now halefler (${bk.ready.length})</div>
+    ? `<div class="bk-group-h">Göreve Hazır Yedekler (${bk.ready.length})</div>
        <div class="bk-grid">${readyCards}</div>`
-    : `<div class="bk-group-h">Ready-now halefler (0)</div>
-       ${emptyState("Bu pozisyon için Ready-now (hazır) halef bulunmuyor.")}`;
+    : `<div class="bk-group-h">Göreve Hazır Yedekler (0)</div>
+       ${emptyState("Bu pozisyon için Göreve Hazır Yedek bulunmuyor.")}`;
   const prepBlock = bk.prep.length
-    ? `<div class="bk-group-h">Hazırlanan / Ready-now olmayan halefler (${bk.prep.length})</div>
+    ? `<div class="bk-group-h">Hazırlanan / Göreve Hazır Olmayan Yedekler (${bk.prep.length})</div>
        <div class="bk-grid">${prepCards}</div>`
     : "";
   return readyBlock + prepBlock +
@@ -318,11 +318,11 @@ function _calibrationTopics(row, bk){
   else if(!bk.ready.length)
     topics.push("Mevcut yedeklerin hazır oluşluk ve gelişim ihtiyaçları değerlendirilebilir.");
   if(bk.ready.length)
-    topics.push("Hazır halef kapasitesinin sürekliliği ve olası zincir etkileri değerlendirilebilir.");
+    topics.push("Göreve Hazır Yedek kapasitesinin sürekliliği ve olası zincir etkileri değerlendirilebilir.");
   if(!isBlank(row["Kritik_Bilgi"]) || num(row["Bilgi_Etkisi"]) > 0)
     topics.push("Kritik bilgi bağımlılığı ve bilgi transferi ihtiyacı değerlendirilebilir.");
   return `<ul class="topics">${topics.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
-    <div class="caption">Bu yönlendirmeler mevcut risk, yedek ve Ready-now verisinden kural
+    <div class="caption">Bu yönlendirmeler mevcut risk, yedek ve Göreve Hazır verisinden kural
       bazlı türetilir. Nihai değerlendirme yönetici ve İK kalibrasyonunda yapılır.</div>`;
 }
 
@@ -331,7 +331,7 @@ function _multiRoleBadge(isim){
   const m = multiRoleCandidacy(isim);
   if(m.roleCount <= 1) return "";
   const parts = [badge(`${m.roleCount} kritik rol için aday`, "warning")];
-  if(m.readyCount > 1) parts.push(badge(`${m.readyCount} kritik rolde Ready Now`, "danger"));
+  if(m.readyCount > 1) parts.push(badge(`${m.readyCount} kritik rolde Göreve Hazır`, "danger"));
   return `<div class="multi-role">${parts.join(" ")}</div>`;
 }
 
@@ -357,10 +357,10 @@ function _todayRisk(row, bk){
   const ready = positionHasReady(row);
   const dep = bk.all.length===0 ? "Tanımlı yedek yok"
     : (bk.all.length===1 ? "Tek tanımlı yedek (bağımlılık)"
-       : (bk.ready.length===1 ? "Tek hazır halef (bağımlılık)" : "Birden fazla tanımlı yedek"));
+       : (bk.ready.length===1 ? "Tek Göreve Hazır Yedek (bağımlılık)" : "Birden fazla tanımlı yedek"));
   const gaps = positionDataGaps(row);
   const items = [
-    ["Ready Now halef durumu", ready ? "Hazır halef var" : "Hazır halef yok"],
+    ["Göreve Hazır Yedek durumu", ready ? "Göreve Hazır Yedek Var" : "Göreve Hazır Yedek Yok"],
     ["Tek kişiye bağımlılık", dep],
     ["Açık gelişim aksiyonu", "Kayıt bulunmuyor"],
     ["Eksik / güncel olmayan veri", gaps.length ? gaps.join(", ") : "Belirgin eksik yok"],
@@ -372,8 +372,8 @@ function _todayRisk(row, bk){
 
 /* V1.1 — Readiness açığı ile mevcut aksiyonların (dürüst) bağlantısı. */
 function _readinessActions(row, st, bk){
-  const gap = (st.label==="Kritik Açık" || st.label==="Hazır Halef Açığı") ? "Var"
-            : (bk.ready.length ? "Yok (hazır halef mevcut)" : "—");
+  const gap = (st.label==="Kritik Açık" || st.label==="Göreve Hazır Yedek Açığı") ? "Var"
+            : (bk.ready.length ? "Yok (Göreve Hazır Yedek mevcut)" : "—");
   return `<div class="panel"><h4>Readiness Açıkları ve Açık Aksiyonlar</h4>
     <div class="crit-kv">
       <div><span>Readiness açığı</span><div class="crit-val">${esc(gap)}</div></div>
@@ -488,7 +488,7 @@ function renderDetail(el){
   window.__pendingDetail = null;
 
   const ctxBanner = ctx
-    ? note("info", `Geldiğiniz bağlam — <b>Halefiyet Sağlığı</b>: Firma
+    ? note("info", `Geldiğiniz bağlam — <b>Yedekleme Sağlığı</b>: Firma
         <b>${esc(disp(ctx.firma))}</b> · Seviye <b>${esc(disp(ctx.seviye))}</b> ·
         Lens <b>${esc(disp(ctx.lensLabel))}</b>. Aşağıdaki listeden bu gruptaki tüm
         ilgili pozisyonları inceleyebilirsiniz.`)
@@ -496,7 +496,7 @@ function renderDetail(el){
 
   // Standart breadcrumb (yalnızca heatmap bağlamı varsa) — gerçek seçili Firma/Seviye/lens.
   const breadcrumb = ctx
-    ? `<nav class="breadcrumb" aria-label="Bağlam">Halefiyet Sağlığı
+    ? `<nav class="breadcrumb" aria-label="Bağlam">Yedekleme Sağlığı
         <i>→</i> ${esc(disp(ctx.firma))} <i>→</i> ${esc(disp(ctx.seviye))}
         <i>→</i> ${esc(disp(ctx.lensLabel))}</nav>`
     : "";

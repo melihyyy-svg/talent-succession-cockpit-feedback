@@ -194,7 +194,7 @@ function positionDataGaps(row){
    Yeni metrik/skor/sıralama/öneri üretmez; mevcut metrik/lens/mutabakatı DEĞİŞTİRMEZ. */
 const SUCCESSION_RISK_FLAGS = {
   gap: {
-    label:"Kritik Ready-now açığı", tone:"danger",
+    label:"Kritik Göreve Hazır Yedek Açığı", tone:"danger",
     desc:"ACİL veya YÜKSEK aciliyet ve hazır (Ready-now) halef yok.",
     test:p => C.HIGH_RISK.includes(String(p[C.URGENCY]).trim()) && !positionHasReady(p),
   },

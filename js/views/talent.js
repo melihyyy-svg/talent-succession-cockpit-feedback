@@ -105,17 +105,17 @@ function _dashScorecard(){
   const rn = readyNowStats();
   const covPct = trPct(100*rn.coverageRatio);
   const gapPct = rn.acilYuksek ? trPct(100*rn.gap/rn.acilYuksek) : null;
-  return `<h3 class="tp-panel-title">Halefiyet Scorecard</h3>
+  return `<h3 class="tp-panel-title">Yedekleme Özeti</h3>
     <div class="tp-score-grid">
       <div class="tp-score-card ok">
-        <div class="tp-score-cap">Ready Now Kapsamı</div>
+        <div class="tp-score-cap">Göreve Hazır Kapsamı</div>
         <div class="tp-score-num">%${covPct}</div>
-        <div class="tp-score-sub">${rn.coverage}/${rn.total} pozisyonun hazır (Ready Now) halefi var</div>
+        <div class="tp-score-sub">${rn.coverage}/${rn.total} pozisyonun Göreve Hazır Yedeği var</div>
       </div>
       <div class="tp-score-card warn">
-        <div class="tp-score-cap">Açık Ready Now Riski</div>
+        <div class="tp-score-cap">Açık Göreve Hazır Riski</div>
         <div class="tp-score-num">${rn.gap}${gapPct!==null?` <span class="tp-score-pct">%${gapPct}</span>`:""}</div>
-        <div class="tp-score-sub">ACİL+YÜKSEK ${rn.acilYuksek} rolün hazır halefi yok</div>
+        <div class="tp-score-sub">ACİL+YÜKSEK ${rn.acilYuksek} rolün Göreve Hazır Yedeği yok</div>
       </div>
     </div>
     <div class="tp-score-mini"><span>Yedeksiz Kritik Rol</span><b>${s.coverage_absent}</b></div>
@@ -146,10 +146,10 @@ function _dashEquity(){
       <div class="tp-eq-nums muted">Hazır ${l.ready} · Yedek(hazır değil) ${l.backupNotReady} · Yedeksiz ${l.noBackup}</div>
     </div>`;
   }).join("");
-  return `<h3 class="tp-panel-title">Halefiyet Kapsamı</h3>${legend}
+  return `<h3 class="tp-panel-title">Yedek Kapsamı</h3>${legend}
     <div class="tp-eq-list">${bars}</div>
     <div class="caption">Seviye bazında yüzde-100 yığılmış; baz = seviyedeki toplam pozisyon.
-      Pozisyon→yedek ilişkisi ve Ready Now allowlist'inden türetilir; yeni skor/tahmin/join yok.</div>`;
+      Pozisyon→yedek ilişkisi ve Göreve Hazır allowlist'inden türetilir; yeni skor/tahmin/join yok.</div>`;
 }
 
 /* Sol alt — Açık Halefiyet Riskleri (mevcut openSuccessionRiskList; ilk 5, mevcut kuyruk sırası). */
@@ -160,7 +160,7 @@ function _dashRisks(){
     const xa=num(a.p[C.RISK_TOTAL]), xb=num(b.p[C.RISK_TOTAL]);
     return (Number.isNaN(xb)?-Infinity:xb)-(Number.isNaN(xa)?-Infinity:xa);
   });
-  const head = `<h3 class="tp-panel-title">Açık Halefiyet Riskleri</h3>`;
+  const head = `<h3 class="tp-panel-title">Açık Yedekleme Riskleri</h3>`;
   if(!all.length) return head + emptyState("Açık risk taşıyan pozisyon bulunmuyor.");
   // Kompakt, taranabilir satırlar (Workday "Succession Plans at Risk" mantığı). Tüm satır
   // tıklanabilir (<button data-riskpos> → mevcut openInDetail drill-down); büyük buton yok.
@@ -186,7 +186,7 @@ function _dashFlow(){
   const steps = [
     ["1","Potansiyel ve 9-Box","9-Box matrisi ve potansiyel görünümü","matrix"],
     ["2","Talent Havuzu","Explorer filtreleri ve tablosu","explorer"],
-    ["3","Halefiyet Riskleri","Yönetici Karar Özeti · Karar Kuyruğu","exec"],
+    ["3","Yedekleme Riskleri","Yönetici Karar Özeti · Karar Kuyruğu","exec"],
     ["4","Kalibrasyon ve Aksiyonlar","Kalibrasyon Görünümü / Aksiyon Takip","kalib"],
   ];
   return `<h3 class="tp-panel-title">Yönetim Akışı</h3>

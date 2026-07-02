@@ -28,7 +28,7 @@ const _DRILL_DEFS = {
              filter:p=>!hasBackup(p)},
   highrisk: {title:"Yüksek Risk — ACİL + YÜKSEK pozisyonlar",
              filter:p=>C.HIGH_RISK.includes(String(p[C.URGENCY]).trim())},
-  readygap: {title:"ACİL + YÜKSEK riskli pozisyonlarda Ready-now açığı (hazır halef yok)",
+  readygap: {title:"ACİL + YÜKSEK riskli pozisyonlarda Göreve Hazır Yedek Açığı (Göreve Hazır Yedek Yok)",
              filter:p=>C.HIGH_RISK.includes(String(p[C.URGENCY]).trim()) && !positionHasReady(p)},
 };
 
@@ -36,7 +36,7 @@ const _DRILL_DEFS = {
    mevcut hasBackup / positionHasReady yüklemlerinin sunumu). */
 function _nextStep(p){
   if(!hasBackup(p)) return ["Yedek belirle","danger"];
-  if(!positionHasReady(p)) return ["Halef hazırlığı","warning"];
+  if(!positionHasReady(p)) return ["Yedek hazırlığı","warning"];
   return ["İzle / sürdür","success"];
 }
 
@@ -53,7 +53,7 @@ function _renderExecDrill(id){
     {key:"Toplam_Risk",label:"Toplam Risk",fmt:v=>disp(v)},
     {key:"Aciliyet_Final",label:"Aciliyet",rawFmt:v=>badge(disp(v))},
     {key:"Yedek_Var",label:"Yedek",rawFmt:(v,r)=>badge(hasBackup(r)?"Var":"Yok", hasBackup(r)?"success":"danger")},
-    {key:"_ready",label:"Hazır Halef",rawFmt:(v,r)=>positionHasReady(r)
+    {key:"_ready",label:"Göreve Hazır Yedek",rawFmt:(v,r)=>positionHasReady(r)
         ? badge("Var","success") : badge("Yok","neutral")},
     {key:"_act",label:"",rawFmt:(v,r)=>`<button class="btn secondary small" data-pos="${DATA.positions.indexOf(r)}">Detayda aç →</button>`},
   ];
@@ -89,14 +89,14 @@ function _coverageCompare(s, rn){
         <b>en az bir tanımlı yedeği</b> var.</div>
     </div>
     <div class="cov-row">
-      <div class="cov-head"><span class="cov-name">Ready-now (Hazır Halef) Kapsamı</span>
+      <div class="cov-head"><span class="cov-name">Göreve Hazır Kapsamı</span>
         <span class="cov-val warn">%${trPct(ready)}</span></div>
       <div class="cov-bar"><div class="cov-fill weak" style="width:${ready.toFixed(1)}%"></div></div>
-      <div class="cov-meaning">${rn.coverage}/${rn.total} pozisyonun <b>hazır halefi</b> var
+      <div class="cov-meaning">${rn.coverage}/${rn.total} pozisyonun <b>Göreve Hazır Yedeği</b> var
         (YETENEK HAZIR / DOĞAL + HAZIR).</div>
     </div>
-    <div class="cov-gap"><b>${gap} pozisyonda</b> tanımlı yedek bulunuyor; Ready Now halef bulunmuyor.
-      <span class="muted">Tanımlı yedek, Ready Now halef anlamına gelmez.</span></div>
+    <div class="cov-gap"><b>${gap} pozisyonda</b> tanımlı yedek bulunuyor; Göreve Hazır Yedek bulunmuyor.
+      <span class="muted">Tanımlı yedek, Göreve Hazır Yedek anlamına gelmez.</span></div>
   </div>`;
 }
 
@@ -112,9 +112,9 @@ function renderExec(el){
       `<div class="cl-pos"><b>${esc(disp(r["Pozisyon"]))}</b><span>${esc(disp(r["İsim"]))} · ${esc(disp(r["Firma"]))} · ${esc(disp(r["Şehir"]))}</span></div>`},
     {key:"_why",label:"Neden riskli?",rawFmt:(v,r)=>
       `${badge(disp(r["Aciliyet_Final"]))}<div class="cl-sub">Risk ${esc(disp(r["Toplam_Risk"]))}</div>`},
-    {key:"_succ",label:"Halef durumu",rawFmt:(v,r)=>{
+    {key:"_succ",label:"Yedek durumu",rawFmt:(v,r)=>{
       const ready = positionHasReady(r); const n = lookupBackups(r["İsim"]).length;
-      return `${badge(ready?"Hazır halef var":"Hazır halef yok", ready?"success":(hasBackup(r)?"warning":"danger"))}<div class="cl-sub">${n} tanımlı yedek</div>`;}},
+      return `${badge(ready?"Göreve Hazır Yedek Var":"Göreve Hazır Yedek Yok", ready?"success":(hasBackup(r)?"warning":"danger"))}<div class="cl-sub">${n} tanımlı yedek</div>`;}},
     {key:"_next",label:"Sonraki adım",rawFmt:(v,r)=>{const ns=_nextStep(r); return badge(ns[0],ns[1]);}},
     {key:"_act",label:"",rawFmt:(v,r)=>`<button class="btn secondary small" data-pos="${DATA.positions.indexOf(r)}">Detayda aç →</button>`},
   ];
@@ -161,8 +161,8 @@ function renderExec(el){
     <header class="exec-head">
       <div class="exec-head-main">
         <div class="exec-eyebrow">YÖNETİCİ KARAR ÖZETİ</div>
-        <h2 class="exec-title">Kritik Halefiyet Durumu</h2>
-        <p class="exec-lede">Kritik pozisyonlar, Ready Now kapsamı ve açık halefiyet riskleri.</p>
+        <h2 class="exec-title">Kritik Yedekleme Durumu</h2>
+        <p class="exec-lede">Kritik pozisyonlar, Göreve Hazır Kapsamı ve açık yedekleme riskleri.</p>
       </div>
       <div class="exec-meta">
         <span class="meta-chip">${s.critical_count} pozisyon</span>
@@ -176,8 +176,8 @@ function renderExec(el){
         <span class="section-hint">Karta tıklayın → filtreli pozisyon listesi</span></div>
       <div class="signal-grid">
         ${_signal("acil","danger", s.acil, "Acil Pozisyon", "Yedek veya aksiyon planı gerektirir")}
-        ${_signal("readygap","danger", rn.gap, "Ready Now Açığı", "ACİL+YÜKSEK riskli pozisyonlarda hazır halef yok")}
-        ${_signal("nobackup","warning", s.coverage_absent, "Tanımlı Yedeği Yok", "Halef adayı tanımlanmamış pozisyonlar")}
+        ${_signal("readygap","danger", rn.gap, "Göreve Hazır Yedek Açığı", "ACİL+YÜKSEK riskli pozisyonlarda Göreve Hazır Yedek Yok")}
+        ${_signal("nobackup","warning", s.coverage_absent, "Tanımlı Yedeği Yok", "Yedek adayı tanımlanmamış pozisyonlar")}
       </div>
       <div class="caption sig-note">Sinyaller aynı pozisyonda kesişebilir; kartlardaki sayılar toplanmaz.</div>
       <div id="exec_drill"></div>
@@ -186,11 +186,11 @@ function renderExec(el){
     <!-- Öncelikli Pozisyonlar (mevcut risk kuyruğu sırası; ilk 5) -->
     <section class="exec-section">
       <div class="section-head"><h3>Öncelikli Pozisyonlar</h3>
-        <span class="section-hint">Açık halefiyet riski taşıyan ilk ${_prio.length} pozisyon</span></div>
+        <span class="section-hint">Açık yedekleme riski taşıyan ilk ${_prio.length} pozisyon</span></div>
       ${_prio.length
         ? `<div class="exec-prio-list">${_prioRows}</div>
-           <button class="exec-prio-all" data-prio-all="1">Tüm açık halefiyet risklerini görüntüle →</button>`
-        : emptyState("Açık halefiyet riski bulunmuyor.")}
+           <button class="exec-prio-all" data-prio-all="1">Tüm açık yedekleme risklerini görüntüle →</button>`
+        : emptyState("Açık yedekleme riski bulunmuyor.")}
     </section>
 
     <!-- TIER 2 — Succession Sağlığı -->
@@ -201,7 +201,7 @@ function renderExec(el){
         <div class="cov-foot">
           <button class="stat-link" data-drill="highrisk">Yüksek Risk (ACİL+YÜKSEK):
             <b>${s.high_risk_count}</b> · toplamın %${trPct(100*s.high_risk_ratio)}'si <span>›</span></button>
-          <span class="muted">Ready-now yedek <b>kaydı</b>: ${rn.readyRecords} (pozisyon değil, kayıt ölçüsü)</span>
+          <span class="muted">Göreve Hazır yedek <b>kaydı</b>: ${rn.readyRecords} (pozisyon değil, kayıt ölçüsü)</span>
         </div>
       </div>
     </section>
@@ -220,11 +220,11 @@ function renderExec(el){
 
     <!-- TIER 4 — Açık Halefiyet Riskleri (Karar Kuyruğu) -->
     <section class="exec-section">
-      <div class="section-head"><h3>4 · Açık halefiyet riskleri — karar kuyruğu</h3>
+      <div class="section-head"><h3>4 · Açık yedekleme riskleri — karar kuyruğu</h3>
         <span class="section-hint">Açık riskli pozisyonları filtreleyin → pozisyon detayına inin</span></div>
       ${note("info", `Mevcut karar kurallarından türeyen açık riskleri taşıyan pozisyonların tek,
         salt-okunur ve filtrelenebilir kuyruğu. Bayraklar mevcut yüklemlerle aynıdır
-        (Kritik Ready-now açığı · Tanımlı yedek yok · Tek yedek bağımlılığı); yeni
+        (Kritik Göreve Hazır Yedek Açığı · Tanımlı yedek yok · Tek yedek bağımlılığı); yeni
         skor/öneri/sıralama üretilmez. Nihai değerlendirme yönetici ve İK kalibrasyonunda yapılır.`)}
       <div class="rq-controls" id="rq_controls">
         ${multiselectField("rq_type","Risk türü", _rqTypeOpts)}
@@ -252,7 +252,7 @@ function renderExec(el){
       <div class="caption">Risk dağılımı — ortalama ${s.risk_mean.toFixed(1).replace(".",",")} ·
         medyan ${s.risk_median.toFixed(1).replace(".",",")} ·
         maks ${s.risk_max.toFixed(1).replace(".",",")}.
-        Veri salt-okunur; risk ve Ready-now değerleri yeniden hesaplanmaz.</div>
+        Veri salt-okunur; risk ve Göreve Hazır değerleri yeniden hesaplanmaz.</div>
     </section>
   `;
 
