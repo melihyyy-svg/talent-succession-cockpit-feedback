@@ -136,15 +136,16 @@ function renderExec(el){
   const _rqLabelToKey = {};
   SUCCESSION_RISK_ORDER.forEach(k => _rqLabelToKey[SUCCESSION_RISK_FLAGS[k].label] = k);
 
-  // V1.3-A — Öncelikli Pozisyonlar: mevcut risk kuyruğunun sırasıyla (urgencyRank→risk) ilk 5.
-  // Yeni sıralama/skor/kural üretmez; kartların altında kompakt, tıklanabilir satır listesi.
+  // V1.3-A — Öncelikli Pozisyonlar: mevcut risk kuyruğunun sırasıyla (urgencyRank→risk) ilk 15.
+  // Yeni sıralama/skor/kural üretmez; aynı sıralı liste 3 kolona (1-5/6-10/11-15) bölünür —
+  // dilimleme render katmanındadır, veri kaynağı/sıra değişmez.
   const _prio = [..._rqAll].sort((a,b)=>{
     const ra=urgencyRank(a.p[C.URGENCY]), rb=urgencyRank(b.p[C.URGENCY]);
     if(ra!==rb) return ra-rb;
     const xa=num(a.p[C.RISK_TOTAL]), xb=num(b.p[C.RISK_TOTAL]);
     return (Number.isNaN(xb)?-Infinity:xb)-(Number.isNaN(xa)?-Infinity:xa);
-  }).slice(0,5);
-  const _prioRows = _prio.map(o => {
+  }).slice(0,15);
+  const _prioRow = o => {
     const flags = o.flags.map(f=>badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)).join(" ");
     return `<button class="exec-prio-row" data-pos="${o.idx}"
         aria-label="${esc(disp(o.p["Pozisyon"]))} — Pozisyon Karar Dosyası'nı aç">
@@ -153,9 +154,16 @@ function renderExec(el){
         <span class="epr-meta">${esc(disp(o.p["Firma"]))} · ${esc(disp(o.p["Seviye"]))}</span>
         <span class="epr-flags">${flags}</span>
       </span>
+      <span class="epr-photo" aria-hidden="true"></span>
       <span class="epr-go" aria-hidden="true">›</span>
     </button>`;
-  }).join("");
+  };
+  // Sabit 3 blok: 1-5 sol, 6-10 orta, 11-15 sağ (15'ten az kayıt varsa eldeki kadarı; boş
+  // kolon render edilmez).
+  const _prioCols = [_prio.slice(0,5), _prio.slice(5,10), _prio.slice(10,15)]
+    .filter(col => col.length)
+    .map(col => `<div class="exec-prio-col">${col.map(_prioRow).join("")}</div>`)
+    .join("");
 
   el.innerHTML = `
     <header class="exec-head">
@@ -188,7 +196,7 @@ function renderExec(el){
       <div class="section-head"><h3>Öncelikli Pozisyonlar</h3>
         <span class="section-hint">Açık yedekleme riski taşıyan ilk ${_prio.length} pozisyon</span></div>
       ${_prio.length
-        ? `<div class="exec-prio-list">${_prioRows}</div>
+        ? `<div class="exec-prio-grid">${_prioCols}</div>
            <button class="exec-prio-all" data-prio-all="1">Tüm açık yedekleme risklerini görüntüle →</button>`
         : emptyState("Açık yedekleme riski bulunmuyor.")}
     </section>
