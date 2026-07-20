@@ -87,7 +87,7 @@ function _renderDiscoveryFor(row, mount){
     if(!comp.length){
       html += emptyState("Seçilen filtrelerle eşleşen Talent Pool kaydı bulunamadı.");
     } else {
-      html += buildTable(cols, comp);
+      html += buildTable(cols, comp, {mobileCard:true});
       html += `<div class="caption">Kaynak: Yetenek Havuzu (salt-okunur). Karşılaştırma
         sütunları yalnızca bilgi amaçlıdır; öneri/karar/skor üretmez.</div>`;
     }
