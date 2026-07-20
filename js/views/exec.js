@@ -59,7 +59,7 @@ function _renderExecDrill(id){
   ];
   host.innerHTML = `<div class="panel exec-drillpanel">
     <h3 style="margin-top:0">Drill-down: ${esc(def.title)} <span class="muted">(${subset.length})</span></h3>
-    ${subset.length ? buildTable(cols, subset) : emptyState("Bu filtreyle eşleşen pozisyon yok.")}
+    ${subset.length ? buildTable(cols, subset, {mobileCard:true}) : emptyState("Bu filtreyle eşleşen pozisyon yok.")}
   </div>`;
   host.querySelectorAll("[data-pos]").forEach(btn =>
     btn.onclick = () => openInDetail(Number(btn.getAttribute("data-pos"))));

@@ -838,64 +838,52 @@ td.wrap-cell .badge{margin:2px 4px 2px 0;}
   #action_table table.data{table-layout:auto;}
 }
 
-/* === Mobil kart dönüşümü — yalnızca #exec_drill (Göreve Hazır Yedek Açığı drill-down) ve
-   #discovery_backups_table (Mevcut Tanımlı Yedekler). Kök neden: bu iki tabloda desktop
-   nth-child yüzdesel kolon genişlikleri + overflow-wrap:anywhere ≤760px'te de aktif kalıyor;
-   dar sabit genişlik + "anywhere" kelimeyi harf harf kırıyor. Çözüm: ≤760px'te tabloyu satır
-   başına kart, hücre başına label/value grid'e çevir (saf CSS; render fonksiyonu değişmez).
-   Kolon adları nth-of-type(n)::before ile korunur — mevcut buildTable() kolon sırasıyla
-   birebir (exec.js _renderExecDrill cols / calc.js C.BACKUP_DISPLAY). Global scroll yok. */
+/* === Mobil kart dönüşümü — yalnızca .mobile-card-table class'ı taşıyan tablolar (şu an
+   #exec_drill/Göreve Hazır Yedek Açığı drill-down ve #discovery_backups_table/Mevcut Tanımlı
+   Yedekler; buildTable(..., {mobileCard:true}) çağrısıyla üretilir — bkz. calc.js buildTable).
+   Kolon adı SIRAYA bağımlı nth-of-type İLE DEĞİL, her <td>'nin kendi data-label attribute'u
+   ile taşınır (attr(data-label)); böylece kolon sırası/DOM derinliği önemsizdir.
+   ÖNEMLİ (gerçek kök neden): #exec_drill/#discovery_backups_table için yukarıda TANIMLI
+   desktop kuralları (satır ~701, ~777: table-layout:fixed / th,td{overflow-wrap:anywhere})
+   media query'siz, ID içerir → specificity (1,1,1)/(1,1,2). Salt class tabanlı bir mobil kural
+   ((0,1,1)/(0,1,2)) bunu HİÇBİR ZAMAN ezemez (specificity her zaman source-order'dan önce
+   gelir) — önceki "nth-of-type" denemesinin gerçek başarısızlık nedeni buydu, cache değil.
+   Bu yüzden aşağıdaki kurallar #exec_drill/#discovery_backups_table ile ID-önekli yazılır
+   (specificity eşitlenir/aşılır, sonradan geldiği için kazanır). Diğer tüm tablolar
+   (opts verilmeyen buildTable çağrıları) bu class'ı almadığından etkilenmez. */
 @media(max-width:760px){
-  #exec_drill table.data,
-  #discovery_backups_table table.data{table-layout:auto;width:100%;}
-  #exec_drill table.data thead,
-  #discovery_backups_table table.data thead{display:none;}
-  #exec_drill table.data tbody,
-  #discovery_backups_table table.data tbody,
-  #exec_drill table.data tr,
-  #discovery_backups_table table.data tr{display:block;width:100%;}
-  #exec_drill table.data tr,
-  #discovery_backups_table table.data tr{
+  #exec_drill table.mobile-card-table,
+  #discovery_backups_table table.mobile-card-table{table-layout:auto;width:100%;}
+  #exec_drill table.mobile-card-table thead,
+  #discovery_backups_table table.mobile-card-table thead{display:none;}
+  #exec_drill table.mobile-card-table tbody,
+  #discovery_backups_table table.mobile-card-table tbody,
+  #exec_drill table.mobile-card-table tr,
+  #discovery_backups_table table.mobile-card-table tr{display:block;width:100%;}
+  #exec_drill table.mobile-card-table tr,
+  #discovery_backups_table table.mobile-card-table tr{
     border:1px solid var(--border-subtle,#E6E8F0); border-radius:10px;
     padding:4px 12px; margin:0 0 10px; background:var(--surface,#fff);
   }
-  #exec_drill table.data td,
-  #discovery_backups_table table.data td{
-    display:grid; grid-template-columns:minmax(84px,38%) 1fr; gap:2px 10px;
-    align-items:start; width:auto !important; max-width:none;
+  #exec_drill table.mobile-card-table td,
+  #discovery_backups_table table.mobile-card-table td{
+    display:grid !important; grid-template-columns:minmax(84px,38%) 1fr; gap:2px 10px;
+    align-items:start; width:auto !important; max-width:none !important;
     padding:8px 0; border-bottom:1px solid var(--border-subtle,#E6E8F0);
-    text-align:left; white-space:normal; overflow-wrap:break-word;
-    word-break:normal; min-width:0;
+    text-align:left; white-space:normal !important; overflow-wrap:break-word !important;
+    word-break:normal !important; min-width:0 !important;
   }
-  #exec_drill table.data td:last-child,
-  #discovery_backups_table table.data td:last-child{border-bottom:0;}
-  #exec_drill table.data td::before,
-  #discovery_backups_table table.data td::before{
+  #exec_drill table.mobile-card-table td:last-child,
+  #discovery_backups_table table.mobile-card-table td:last-child{border-bottom:0;}
+  /* Label yalnızca data-label taşıyan hücrelerde görünür (attr() ile — hard-coded metin yok). */
+  #exec_drill table.mobile-card-table td[data-label]::before,
+  #discovery_backups_table table.mobile-card-table td[data-label]::before{
+    content:attr(data-label); display:block;
     font-weight:600; color:var(--text-muted,#5A6072); font-size:.76rem;
   }
-  /* #exec_drill (_renderExecDrill cols): İsim, Pozisyon, Firma, Şehir, Toplam_Risk,
-     Aciliyet_Final, Yedek_Var, _ready, _act(etiketsiz aksiyon). */
-  #exec_drill table.data td:nth-of-type(1)::before{content:"Mevcut Pozisyon Sahibi";}
-  #exec_drill table.data td:nth-of-type(2)::before{content:"Pozisyon";}
-  #exec_drill table.data td:nth-of-type(3)::before{content:"Firma";}
-  #exec_drill table.data td:nth-of-type(4)::before{content:"Şehir";}
-  #exec_drill table.data td:nth-of-type(5)::before{content:"Toplam Risk";}
-  #exec_drill table.data td:nth-of-type(6)::before{content:"Aciliyet";}
-  #exec_drill table.data td:nth-of-type(7)::before{content:"Yedek";}
-  #exec_drill table.data td:nth-of-type(8)::before{content:"Göreve Hazır Yedek";}
-  #exec_drill table.data td:nth-of-type(9){grid-template-columns:1fr;padding-top:10px;}
-  /* #discovery_backups_table (C.BACKUP_DISPLAY sırası). */
-  #discovery_backups_table table.data td:nth-of-type(1)::before{content:"Yedek İsim";}
-  #discovery_backups_table table.data td:nth-of-type(2)::before{content:"Görev";}
-  #discovery_backups_table table.data td:nth-of-type(3)::before{content:"Firma";}
-  #discovery_backups_table table.data td:nth-of-type(4)::before{content:"Şehir";}
-  #discovery_backups_table table.data td:nth-of-type(5)::before{content:"Tip";}
-  #discovery_backups_table table.data td:nth-of-type(6)::before{content:"Assessment";}
-  #discovery_backups_table table.data td:nth-of-type(7)::before{content:"Performans";}
-  #discovery_backups_table table.data td:nth-of-type(8)::before{content:"9-Box";}
-  #discovery_backups_table table.data td:nth-of-type(9)::before{content:"Coğrafi Uyum";}
-  #discovery_backups_table table.data td:nth-of-type(10)::before{content:"Fonksiyonel Uyum";}
-  #discovery_backups_table table.data td:nth-of-type(11)::before{content:"Rol Kıdemi";}
-  #discovery_backups_table table.data td:nth-of-type(12)::before{content:"Ayrılma Riski";}
-  #discovery_backups_table table.data td:nth-of-type(13)::before{content:"Çoklu Yedek";}
+  /* data-label'sız hücreler (ör. etiketsiz aksiyon butonu kolonu) tam genişlik render edilir. */
+  #exec_drill table.mobile-card-table td:not([data-label]),
+  #discovery_backups_table table.mobile-card-table td:not([data-label]){
+    grid-template-columns:1fr; padding-top:10px;
+  }
 }

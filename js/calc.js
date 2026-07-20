@@ -474,17 +474,25 @@ function emptyState(text){ return `<div class="eks-empty">${esc(text)}</div>`; }
 function note(kind, html){ return `<div class="note ${kind}">${html}</div>`; }
 
 /* Tablo: columns=[{key,label,cls,fmt}], rows=obj[]. fmt(value,row)->string (kaçışsız ham izinli mi?
-   güvenli olması için fmt çıktısı düz metin kabul edilir ve kaçışlanır; badge için rawFmt kullan). */
-function buildTable(columns, rows){
+   güvenli olması için fmt çıktısı düz metin kabul edilir ve kaçışlanır; badge için rawFmt kullan).
+   opts.mobileCard (opsiyonel, varsayılan false): true ise <table>'a "mobile-card-table" class'ı
+   ve dolu label'lı her <td>'ye data-label="<kolon başlığı>" attribute'u eklenir — ≤760px'te CSS
+   tabloyu kart listesine çevirirken kolon adını attr(data-label) ile gösterir (kolon SIRASINA
+   bağımlı nth-of-type YOK). Boş label'lı kolonlar (ör. aksiyon butonu) data-label almaz.
+   opts verilmezse davranış TAMAMEN AYNI kalır (geriye uyumlu; mevcut tüm çağrılar etkilenmez). */
+function buildTable(columns, rows, opts){
+  const mobileCard = !!(opts && opts.mobileCard);
   const head = columns.map(c=>`<th>${esc(c.label)}</th>`).join("");
   const body = rows.map(r => "<tr>"+columns.map(c=>{
     let cell;
     if(c.rawFmt){ cell = c.rawFmt(r[c.key], r); }          // ham HTML (badge vb.)
     else if(c.fmt){ cell = esc(c.fmt(r[c.key], r)); }
     else { cell = esc(disp(r[c.key])); }
-    return `<td class="${c.cls||""}">${cell}</td>`;
+    const dataLabel = (mobileCard && c.label) ? ` data-label="${esc(c.label)}"` : "";
+    return `<td class="${c.cls||""}"${dataLabel}>${cell}</td>`;
   }).join("")+"</tr>").join("");
-  return `<div class="table-scroll"><table class="data">
+  const tableCls = mobileCard ? "data mobile-card-table" : "data";
+  return `<div class="table-scroll"><table class="${tableCls}">
     <thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
