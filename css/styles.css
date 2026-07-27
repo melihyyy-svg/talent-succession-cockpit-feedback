@@ -345,53 +345,178 @@ select[multiple]{min-height:104px;}
 .section-hint{color:var(--text-2);font-size:.8rem;}
 .exec-section h4{margin:0 0 8px;font-size:.92rem;color:var(--text-2);font-weight:700;}
 
-/* Tier 1 — kritik sinyal kartları */
-.signal-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
-.signal-card{position:relative;text-align:left;font:inherit;cursor:pointer;width:100%;
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:18px 20px 16px;box-shadow:var(--shadow);overflow:hidden;
-  transition:box-shadow .14s,transform .14s;}
-.signal-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--sig,#5A6072);}
-.signal-card:hover,.signal-card:focus-visible{transform:translateY(-2px);
-  box-shadow:0 6px 18px rgba(20,24,60,.12),var(--shadow);outline:none;}
-.signal-card .sig-num{font-size:2.6rem;font-weight:800;line-height:1;color:var(--sig,#1F2440);}
-.signal-card .sig-label{font-weight:700;font-size:.96rem;margin:4px 0 2px;color:var(--text);}
-.signal-card .sig-desc{color:var(--text-2);font-size:.82rem;line-height:1.25;margin:0 0 8px;}
-.signal-card .sig-action{color:var(--sig,#1F2440);font-size:.82rem;font-weight:600;display:flex;
-  justify-content:flex-start;gap:6px;align-items:center;border-top:1px solid var(--border);
-  padding-top:8px;}
-.signal-card .sig-go{color:var(--sig,#1E2A6B);font-weight:700;white-space:nowrap;}
-.sig-note{margin:8px 0 0;}
-.signal-card.t-danger{--sig:var(--danger);background:linear-gradient(180deg,var(--danger-bg),#fff 60%);}
-.signal-card.t-warning{--sig:var(--warning);background:linear-gradient(180deg,var(--warning-bg),#fff 60%);}
-.signal-card.t-info{--sig:var(--info);}
-.exec-drillpanel{margin-top:16px;}
+/* ===================================================================
+   Yönetici Karar Alanı — çalışma alanı (workspace). Namespace: .ws-*
+   Yalnızca Özet (exec) ekranında kullanılır; diğer ekranları etkilemez.
+   =================================================================== */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
-/* Öncelikli Pozisyonlar — ilk 15 kayıt, 3 kolonlu dengeli grid (1-5/6-10/11-15). Her kolon
-   kompakt, ince ayırıcılı satır listesi (kart/gölge yok; tüm satır tıklanabilir → Pozisyon
-   Karar Dosyası drill-down). Global yatay scroll üretmez. */
-.exec-prio-grid{display:grid;gap:8px 24px;grid-template-columns:repeat(3,minmax(0,1fr));
+/* --- Başlık + metadata --- */
+.ws-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
+  flex-wrap:wrap;margin:4px 0 14px;}
+.ws-eyebrow{color:var(--text-muted,#5A6072);font-size:.72rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;}
+.ws-title{margin:4px 0 2px;font-size:1.5rem;font-weight:800;letter-spacing:-.02em;
+  color:var(--text-primary,#1F2440);}
+.ws-lede{margin:0;color:var(--text-muted,#5A6072);font-size:.9rem;}
+.ws-head-meta{display:flex;gap:8px;flex-wrap:wrap;}
+.ws-pill{background:var(--surface,#fff);border:1px solid var(--border-subtle,#E6E8F0);
+  border-radius:999px;padding:5px 12px;font-size:.76rem;font-weight:600;
+  color:var(--text-muted,#5A6072);white-space:nowrap;}
+
+/* --- Kompakt filtre kontrolleri --- */
+.ws-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;}
+.ws-field{display:flex;flex-direction:column;gap:4px;min-width:0;flex:0 1 190px;}
+.ws-field label{font-size:.74rem;font-weight:600;color:var(--text-muted,#5A6072);}
+.ws-select{padding:7px 10px;font-size:.86rem;border-radius:8px;
+  border:1px solid var(--border-subtle,#E6E8F0);background:#fff;color:var(--text-primary,#1F2440);}
+.ws-select:focus-visible{outline:2px solid var(--brand-navy,#1E2A6B);outline-offset:1px;}
+
+/* --- Kritik sinyal şeridi (kompakt metric kartları) --- */
+.ws-signals{display:grid;gap:12px;grid-template-columns:repeat(5,minmax(0,1fr));}
+@media(max-width:1180px){ .ws-signals{grid-template-columns:repeat(3,minmax(0,1fr));} }
+@media(max-width:760px){ .ws-signals{grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media(max-width:420px){ .ws-signals{grid-template-columns:1fr;} }
+.ws-kpi{display:flex;flex-direction:column;gap:1px;text-align:left;font:inherit;cursor:pointer;
+  background:var(--surface,#fff);border:1px solid var(--border-subtle,#E6E8F0);
+  border-left:3px solid var(--kpi,#5A6072);border-radius:10px;padding:12px 14px;
+  box-shadow:0 1px 2px rgba(20,24,60,.05);transition:box-shadow .12s,border-color .12s,background .12s;}
+.ws-kpi:hover{box-shadow:0 3px 10px rgba(20,24,60,.10);}
+.ws-kpi:focus-visible{outline:2px solid var(--brand-navy,#1E2A6B);outline-offset:2px;}
+.ws-kpi[aria-pressed="true"]{background:var(--brand-navy-soft,#EAEEF8);
+  border-color:var(--brand-navy,#1E2A6B);box-shadow:inset 0 0 0 1px var(--brand-navy,#1E2A6B);}
+.ws-kpi[aria-pressed="true"]::after{content:"Filtre aktif";font-size:.68rem;font-weight:700;
+  color:var(--brand-navy,#1E2A6B);margin-top:4px;}
+.ws-kpi-num{font-size:1.7rem;font-weight:800;line-height:1.1;color:var(--kpi,#1F2440);
+  font-variant-numeric:tabular-nums;}
+.ws-kpi-title{font-size:.84rem;font-weight:700;color:var(--text-primary,#1F2440);line-height:1.2;}
+.ws-kpi-desc{font-size:.74rem;color:var(--text-muted,#5A6072);line-height:1.25;}
+.ws-kpi.t-critical{--kpi:var(--danger,#DC2626);}
+.ws-kpi.t-warning{--kpi:var(--warning,#B45309);}
+.ws-kpi.t-amber{--kpi:#B45309;}
+.ws-kpi.t-neutral{--kpi:var(--brand-navy,#1E2A6B);}
+.ws-signal-note{margin:8px 0 18px;}
+
+/* --- Master–detail yerleşimi --- */
+.ws-grid{display:grid;gap:16px;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);
   align-items:start;}
-@media(max-width:1180px){ .exec-prio-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
-@media(max-width:760px){ .exec-prio-grid{grid-template-columns:1fr;} }
-.exec-prio-col{display:flex;flex-direction:column;min-width:0;}
-.exec-prio-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;
-  cursor:pointer;background:none;border:0;border-bottom:1px solid var(--border-subtle,#E6E8F0);
-  padding:9px 4px;border-radius:6px;transition:background .12s;}
-.exec-prio-col .exec-prio-row:last-child{border-bottom:0;}
-.exec-prio-row:hover{background:var(--surface-muted,#EEF0F8);}
-.epr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
-.epr-name{font-weight:700;font-size:.9rem;color:var(--text);line-height:1.2;}
-.epr-meta{font-size:.78rem;color:var(--text-2);}
-.epr-flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:1px;}
-/* Foto placeholder — sade, kurumsal gri/lila kutu; ileride gerçek görsel için sabit alan. */
-.epr-photo{flex:0 0 auto;width:38px;height:38px;border-radius:8px;
-  background:linear-gradient(135deg,var(--brand-navy-soft,#EAEEF8) 0%,#E3DEF6 100%);
-  border:1px solid var(--border-subtle,#E6E8F0);}
-.epr-go{flex:0 0 auto;color:var(--text-2);font-size:1.15rem;line-height:1;}
-.exec-prio-all{display:inline-block;margin-top:10px;background:none;border:0;padding:0;
+@media(max-width:1180px){ .ws-grid{grid-template-columns:1fr;} }
+.ws-list-panel,.ws-detail-panel{margin:0;min-width:0;}
+@media(min-width:1181px){ .ws-detail-panel{position:sticky;top:12px;max-height:calc(100vh - 24px);
+  overflow-y:auto;} }
+.ws-panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin-bottom:10px;}
+.ws-panel-title{margin:0;font-size:1.02rem;font-weight:750;}
+.ws-panel-hint{font-size:.78rem;color:var(--text-muted,#5A6072);}
+
+/* --- Liste araç çubuğu + filtre chip'leri --- */
+.ws-toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;margin-bottom:10px;}
+.ws-search{flex:1 1 240px;min-width:0;}
+.ws-search input{width:100%;padding:7px 11px;font-size:.86rem;border-radius:8px;
+  border:1px solid var(--border-subtle,#E6E8F0);background:#fff;}
+.ws-search input:focus-visible{outline:2px solid var(--brand-navy,#1E2A6B);outline-offset:1px;}
+.ws-rd-legend{display:flex;gap:12px;font-size:.74rem;color:var(--text-muted,#5A6072);flex-wrap:wrap;}
+.ws-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.ws-chips:empty{display:none;}
+.ws-chips-lbl{font-size:.74rem;color:var(--text-muted,#5A6072);font-weight:600;}
+.ws-chip{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.74rem;
+  font-weight:600;cursor:pointer;background:var(--brand-navy-soft,#EAEEF8);
+  color:var(--brand-navy,#1E2A6B);border:1px solid #D3DAEE;border-radius:999px;padding:3px 9px;}
+.ws-chip:hover{background:#DDE4F4;}
+.ws-chip-clear{font:inherit;font-size:.74rem;font-weight:600;cursor:pointer;background:none;
+  border:0;color:var(--text-muted,#5A6072);text-decoration:underline;padding:3px 4px;}
+.ws-chip:focus-visible,.ws-chip-clear:focus-visible{outline:2px solid var(--brand-navy,#1E2A6B);
+  outline-offset:1px;}
+
+/* --- Pozisyon tablosu (master) --- */
+.ws-table-wrap{border:1px solid var(--border-subtle,#E6E8F0);border-radius:10px;overflow:hidden;}
+.ws-table{width:100%;border-collapse:collapse;table-layout:auto;font-size:.86rem;background:#fff;}
+.ws-table thead th{background:var(--surface-muted,#EEF0F8);color:var(--text-muted,#5A6072);
+  font-size:.74rem;font-weight:700;text-align:left;padding:9px 12px;
+  border-bottom:1px solid var(--border-subtle,#E6E8F0);white-space:nowrap;}
+.ws-table td{padding:10px 12px;border-bottom:1px solid var(--border-subtle,#E6E8F0);
+  vertical-align:top;overflow-wrap:break-word;word-break:normal;}
+.ws-table tr:last-child td{border-bottom:0;}
+.ws-row{cursor:pointer;transition:background .12s;}
+.ws-row:hover{background:var(--surface-muted,#EEF0F8);}
+.ws-row:focus-visible{outline:2px solid var(--brand-navy,#1E2A6B);outline-offset:-2px;}
+.ws-row.is-selected{background:var(--brand-navy-soft,#EAEEF8);
+  box-shadow:inset 3px 0 0 var(--brand-navy,#1E2A6B);}
+.ws-c-rank{width:56px;font-variant-numeric:tabular-nums;font-weight:700;
+  color:var(--text-muted,#5A6072);}
+.ws-c-pos{min-width:190px;}
+.ws-pos-name{display:block;font-weight:700;color:var(--text-primary,#1F2440);line-height:1.25;}
+.ws-pos-sub{display:block;font-size:.76rem;color:var(--text-muted,#5A6072);}
+.ws-c-org{min-width:130px;}
+.ws-c-risk{min-width:150px;}
+.ws-flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.ws-c-rd{width:112px;}
+.ws-rd{display:flex;gap:10px;flex-wrap:wrap;}
+.ws-rd-i{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:600;
+  color:var(--text-muted,#5A6072);white-space:nowrap;}
+.ws-rd-i i{width:8px;height:8px;border-radius:50%;background:currentColor;flex:0 0 auto;}
+.ws-rd-i.ready{color:var(--success,#0F9D8C);}
+.ws-rd-i.other{color:var(--warning,#B45309);}
+.ws-rd-none{color:var(--text-muted,#5A6072);}
+.ws-more{display:inline-block;margin-top:10px;background:none;border:0;padding:2px;
   color:var(--brand-navy,#1E2A6B);font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;}
-.exec-prio-all:hover{text-decoration:underline;}
+.ws-more:hover{text-decoration:underline;}
+.ws-more:focus-visible{outline:2px solid var(--brand-navy,#1E2A6B);outline-offset:1px;}
+
+/* --- Detay paneli --- */
+.ws-detail-empty{padding:6px 0;}
+.ws-dt-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+  padding-bottom:12px;border-bottom:1px solid var(--border-subtle,#E6E8F0);}
+.ws-dt-titles{min-width:0;}
+.ws-dt-title{font-weight:800;font-size:1.02rem;line-height:1.25;color:var(--text-primary,#1F2440);}
+.ws-dt-sub{font-size:.78rem;color:var(--text-muted,#5A6072);margin-top:2px;}
+.ws-dt-cta{margin:12px 0 4px;width:100%;text-align:center;}
+.ws-dt-block{padding-top:14px;margin-top:12px;border-top:1px solid var(--border-subtle,#E6E8F0);}
+.ws-dt-block h4{margin:0 0 8px;font-size:.8rem;font-weight:700;color:var(--text-muted,#5A6072);
+  text-transform:uppercase;letter-spacing:.04em;}
+.ws-dt-kv{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:10px;font-size:.84rem;}
+.ws-dt-kv>div{display:flex;align-items:center;gap:6px;}
+.ws-dt-kv span{color:var(--text-muted,#5A6072);}
+.ws-risk-row{display:flex;flex-direction:column;gap:2px;padding:7px 0;
+  border-bottom:1px solid var(--border-subtle,#E6E8F0);}
+.ws-risk-row:last-child{border-bottom:0;}
+.ws-risk-desc{font-size:.76rem;color:var(--text-muted,#5A6072);}
+.ws-empty-inline{font-size:.82rem;color:var(--text-muted,#5A6072);
+  background:var(--surface-muted,#EEF0F8);border-radius:8px;padding:9px 11px;}
+.ws-pipe{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.ws-pipe-i{background:var(--surface-muted,#EEF0F8);border-radius:8px;padding:9px 10px;
+  display:flex;flex-direction:column;gap:1px;border-left:3px solid var(--pc,#5A6072);}
+.ws-pipe-i b{font-size:1.2rem;font-variant-numeric:tabular-nums;line-height:1.1;}
+.ws-pipe-i span{font-size:.72rem;color:var(--text-muted,#5A6072);}
+.ws-pipe-i.ready{--pc:var(--success,#0F9D8C);}
+.ws-pipe-i.other{--pc:var(--warning,#B45309);}
+.ws-pipe-i.total{--pc:var(--brand-navy,#1E2A6B);}
+.ws-cand-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;}
+.ws-cand{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;
+  border-bottom:1px solid var(--border-subtle,#E6E8F0);}
+.ws-cand:last-child{border-bottom:0;}
+.ws-cand-main{min-width:0;display:flex;flex-direction:column;gap:1px;}
+.ws-cand-name{font-weight:650;font-size:.86rem;color:var(--text-primary,#1F2440);
+  overflow-wrap:break-word;}
+.ws-cand-meta{font-size:.75rem;color:var(--text-muted,#5A6072);overflow-wrap:break-word;}
+
+/* --- Mobil: pozisyon tablosu kart listesine döner (yatay scroll YOK) --- */
+@media(max-width:760px){
+  .ws-table-wrap{border:0;border-radius:0;}
+  .ws-table,.ws-table tbody,.ws-table tr{display:block;width:100%;}
+  .ws-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+  .ws-table tr.ws-row{border:1px solid var(--border-subtle,#E6E8F0);border-radius:10px;
+    margin-bottom:10px;padding:4px 12px;background:#fff;}
+  .ws-table td{display:grid;grid-template-columns:minmax(96px,36%) minmax(0,1fr);gap:4px 10px;
+    width:auto;padding:8px 0;border-bottom:1px solid var(--border-subtle,#E6E8F0);
+    white-space:normal;word-break:normal;overflow-wrap:break-word;}
+  .ws-table td:last-child{border-bottom:0;}
+  .ws-table td::before{content:attr(data-label);font-weight:600;font-size:.74rem;
+    color:var(--text-muted,#5A6072);}
+  .ws-row.is-selected{box-shadow:inset 3px 0 0 var(--brand-navy,#1E2A6B);}
+}
 
 /* Tier 2 — kapsam vs hazır-halef */
 .cov-panel{padding:20px 22px;}
@@ -410,23 +535,14 @@ select[multiple]{min-height:104px;}
   border-radius:12px;font-size:.9rem;color:#7a4a08;}
 .cov-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
   margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:.84rem;}
-.stat-link{background:none;border:none;font:inherit;cursor:pointer;color:var(--text);
-  padding:0;display:inline-flex;gap:6px;align-items:center;}
-.stat-link b{color:var(--warning);}
-.stat-link span{color:var(--brand-2);font-weight:800;}
-.stat-link:hover{color:var(--brand-2);}
-
-/* Tier 3 — kritik pozisyon listesi hücreleri */
-.cl-pos{display:flex;flex-direction:column;gap:2px;}
-.cl-pos span{color:var(--text-2);font-size:.78rem;}
-.cl-sub{color:var(--text-2);font-size:.74rem;margin-top:3px;}
 
 /* Bağlam bölümü — sakin */
 .exec-context{margin-top:34px;padding-top:6px;border-top:1px solid var(--border);}
 
 @media(max-width:640px){
   .exec-title{font-size:1.28rem;}
-  .signal-card .sig-num{font-size:2.2rem;}
+  .ws-title{font-size:1.3rem;}
+  .ws-kpi-num{font-size:1.5rem;}
 }
 
 /* ===================================================================
@@ -664,10 +780,6 @@ ul.topics li{margin:.3rem 0;}
 .bar-row .bf{height:100%;border-radius:6px;background:var(--brand-2);}
 .bar-row .bv{flex:0 0 46px;text-align:right;color:var(--text-2);font-variant-numeric:tabular-nums;}
 
-/* === V1.2-A: Açık Halefiyet Riskleri (Karar Kuyruğu) === */
-.rq-controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
-  margin:12px 0;align-items:end;}
-.rq-counts{margin:4px 0 14px;}
 /* Bayrak rozetleri çok-bayraklı satırda sarmalanır (taşma yok). */
 td.wrap-cell .badge{margin:2px 4px 2px 0;}
 
@@ -696,35 +808,6 @@ td.wrap-cell .badge{margin:2px 4px 2px 0;}
    uzun metin KESİLMEZ — doğal olarak sarılır, satır gerektiğinde dikey büyür. Mevcut
    wrap-cell / rationale-cell (Gerekçe önizleme+Detay) / compact-row davranışları korunur.
    .table-scroll{overflow-x:auto} güvenlik ağı olarak kaldırılmadı (veri görünürlüğü). */
-
-/* --- Yönetici Karar Özeti: TIER1 ACİL/Yedeksiz/Ready-gap drill-down (#exec_drill, 9 kolon) --- */
-#exec_drill table.data{table-layout:fixed;width:100%;}
-#exec_drill table.data th,#exec_drill table.data td{white-space:normal;overflow-wrap:anywhere;}
-#exec_drill table.data thead th:nth-child(1){width:15%}
-#exec_drill table.data thead th:nth-child(2){width:19%}
-#exec_drill table.data thead th:nth-child(3){width:12%}
-#exec_drill table.data thead th:nth-child(4){width:10%}
-#exec_drill table.data thead th:nth-child(5){width:8%}
-#exec_drill table.data thead th:nth-child(6){width:10%}
-#exec_drill table.data thead th:nth-child(7){width:8%}
-#exec_drill table.data thead th:nth-child(8){width:9%}
-#exec_drill table.data thead th:nth-child(9){width:9%}
-
-/* --- Yönetici Karar Özeti: TIER3 kritik pozisyonlar (#exec_critical_table, 5 kolon) --- */
-#exec_critical_table table.data{table-layout:fixed;width:100%;}
-#exec_critical_table table.data thead th:nth-child(1){width:34%}
-#exec_critical_table table.data thead th:nth-child(2){width:16%}
-#exec_critical_table table.data thead th:nth-child(3){width:20%}
-#exec_critical_table table.data thead th:nth-child(4){width:16%}
-#exec_critical_table table.data thead th:nth-child(5){width:14%}
-
-/* --- Yönetici Karar Özeti: TIER4 Açık Halefiyet Riskleri karar kuyruğu (#rq_table, 5 kolon) --- */
-#rq_table table.data{table-layout:fixed;width:100%;}
-#rq_table table.data thead th:nth-child(1){width:32%}
-#rq_table table.data thead th:nth-child(2){width:16%}
-#rq_table table.data thead th:nth-child(3){width:26%}
-#rq_table table.data thead th:nth-child(4){width:12%}
-#rq_table table.data thead th:nth-child(5){width:14%}
 
 /* --- Talent Pool Explorer (#talent_table, 9 varsayılan kolon; yatay scroll YOK) ---
    İkincil alanlar tablodan çıkarıldı → 9 okunabilir/kompakt kolon container'a sığar.
@@ -827,9 +910,6 @@ td.wrap-cell .badge{margin:2px 4px 2px 0;}
    kart/stack render fonksiyonu eklenmez — üst kapsam kısıtı: yeni fonksiyon yok). Global
    sayfa taşması yok; kaydırma yalnızca ilgili tablo container'ı içinde kalır. */
 @media(max-width:760px){
-  #exec_drill table.data,
-  #exec_critical_table table.data,
-  #rq_table table.data,
   #talent_table table.data,
   #discovery_table table.data,
   #discovery_backups_table table.data,
@@ -839,38 +919,37 @@ td.wrap-cell .badge{margin:2px 4px 2px 0;}
 }
 
 /* === Mobil kart dönüşümü — yalnızca .mobile-card-table class'ı taşıyan tablolar (şu an
-   #exec_drill/Göreve Hazır Yedek Açığı drill-down ve #discovery_backups_table/Mevcut Tanımlı
-   Yedekler; buildTable(..., {mobileCard:true}) çağrısıyla üretilir — bkz. calc.js buildTable).
+   #discovery_table, #discovery_backups_table ve ID'siz tablolar; buildTable(..., {mobileCard:true}) çağrısıyla üretilir — bkz. calc.js buildTable).
    Kolon adı SIRAYA bağımlı nth-of-type İLE DEĞİL, her <td>'nin kendi data-label attribute'u
    ile taşınır (attr(data-label)); böylece kolon sırası/DOM derinliği önemsizdir.
-   ÖNEMLİ (gerçek kök neden): #exec_drill/#discovery_backups_table için yukarıda TANIMLI
+   ÖNEMLİ (gerçek kök neden): #discovery_table/#discovery_backups_table için yukarıda TANIMLI
    desktop kuralları (satır ~701, ~777: table-layout:fixed / th,td{overflow-wrap:anywhere})
    media query'siz, ID içerir → specificity (1,1,1)/(1,1,2). Salt class tabanlı bir mobil kural
    ((0,1,1)/(0,1,2)) bunu HİÇBİR ZAMAN ezemez (specificity her zaman source-order'dan önce
    gelir) — önceki "nth-of-type" denemesinin gerçek başarısızlık nedeni buydu, cache değil.
-   Bu yüzden aşağıdaki kurallar #exec_drill/#discovery_backups_table ile ID-önekli yazılır
+   Bu yüzden ID'li tablolar için kurallar ID-önekli de yazılır; generic selector ID'siz tabloları kapsar
    (specificity eşitlenir/aşılır, sonradan geldiği için kazanır). Diğer tüm tablolar
    (opts verilmeyen buildTable çağrıları) bu class'ı almadığından etkilenmez. */
 @media(max-width:760px){
-  #exec_drill table.mobile-card-table,
+  table.mobile-card-table,
   #discovery_backups_table table.mobile-card-table,
   #discovery_table table.mobile-card-table{table-layout:auto;width:100%;}
-  #exec_drill table.mobile-card-table thead,
+  table.mobile-card-table thead,
   #discovery_backups_table table.mobile-card-table thead,
   #discovery_table table.mobile-card-table thead{display:none;}
-  #exec_drill table.mobile-card-table tbody,
+  table.mobile-card-table tbody,
   #discovery_backups_table table.mobile-card-table tbody,
   #discovery_table table.mobile-card-table tbody,
-  #exec_drill table.mobile-card-table tr,
+  table.mobile-card-table tr,
   #discovery_backups_table table.mobile-card-table tr,
   #discovery_table table.mobile-card-table tr{display:block;width:100%;}
-  #exec_drill table.mobile-card-table tr,
+  table.mobile-card-table tr,
   #discovery_backups_table table.mobile-card-table tr,
   #discovery_table table.mobile-card-table tr{
     border:1px solid var(--border-subtle,#E6E8F0); border-radius:10px;
     padding:4px 12px; margin:0 0 10px; background:var(--surface,#fff);
   }
-  #exec_drill table.mobile-card-table td,
+  table.mobile-card-table td,
   #discovery_backups_table table.mobile-card-table td,
   #discovery_table table.mobile-card-table td{
     display:grid !important; grid-template-columns:minmax(84px,38%) 1fr; gap:2px 10px;
@@ -879,11 +958,11 @@ td.wrap-cell .badge{margin:2px 4px 2px 0;}
     text-align:left; white-space:normal !important; overflow-wrap:break-word !important;
     word-break:normal !important; min-width:0 !important;
   }
-  #exec_drill table.mobile-card-table td:last-child,
+  table.mobile-card-table td:last-child,
   #discovery_backups_table table.mobile-card-table td:last-child,
   #discovery_table table.mobile-card-table td:last-child{border-bottom:0;}
   /* Label yalnızca data-label taşıyan hücrelerde görünür (attr() ile — hard-coded metin yok). */
-  #exec_drill table.mobile-card-table td[data-label]::before,
+  table.mobile-card-table td[data-label]::before,
   #discovery_backups_table table.mobile-card-table td[data-label]::before,
   #discovery_table table.mobile-card-table td[data-label]::before{
     content:attr(data-label); display:block;
@@ -891,7 +970,7 @@ td.wrap-cell .badge{margin:2px 4px 2px 0;}
     white-space:normal; word-break:normal; overflow-wrap:break-word;
   }
   /* data-label'sız hücreler (ör. etiketsiz aksiyon butonu kolonu) tam genişlik render edilir. */
-  #exec_drill table.mobile-card-table td:not([data-label]),
+  table.mobile-card-table td:not([data-label]),
   #discovery_backups_table table.mobile-card-table td:not([data-label]),
   #discovery_table table.mobile-card-table td:not([data-label]){
     grid-template-columns:1fr; padding-top:10px;

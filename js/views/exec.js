@@ -1,8 +1,15 @@
-/* exec.js — Ekran 1: Yönetici Karar Özeti (Executive Decision View)
-   Görsel premium iterasyon: üç katmanlı karar hiyerarşisi.
-   Korunan: tüm metrik değerleri, Ready-now & risk mantığı, 4 KPI drill-down,
-   "Detayda aç" deep-link, responsive yapı, Midnight Executive kimliği.
-   Yeni veri/metrik/hesap/AI YOK — yalnızca render & CSS sunum katmanı. */
+/* exec.js — Ekran 1: Yönetici Karar Alanı (Talent & Succession çalışma alanı).
+   Master–detail workspace: kompakt kritik sinyal şeridi → filtrelenebilir pozisyon listesi
+   → seçili pozisyonun detay paneli.
+
+   TÜM değerler MEVCUT hesaplardan gelir (calculateSummary / readyNowStats /
+   positionRiskFlags / SUCCESSION_RISK_FLAGS / benchStrength / lookupBackups /
+   positionHasReady / hasBackup / urgencyRank). Yeni skor, yeni risk kuralı, yeni
+   sıralama mantığı veya tahmin ÜRETİLMEZ.
+
+   Kaynakta BULUNMAYAN alanlar (aksiyon sahibi/termin/durum, son güncelleme tarihi,
+   kalibrasyon tarihi, serbest not, zaman-bazlı hazırlık kademesi "1-2 yıl / 3+ yıl")
+   UYDURULMAZ: ya dürüst boş durumla gösterilir ya da hiç render edilmez. */
 
 function _levelCoverage(rows){
   const groups = {};
@@ -20,16 +27,20 @@ function _levelCoverage(rows){
   });
 }
 
-/* KPI drill-down hedef tanımları (filtreli pozisyon listesi). */
+/* Kritik sinyal yüklemleri — hepsi MEVCUT kurallardır (yeni eşik/kural yok).
+   Bir sinyal seçildiğinde pozisyon listesi bu yükleme göre filtrelenir; kart üzerindeki
+   sayı ile listedeki kayıt sayısı bu sayede birebir aynıdır. */
 const _DRILL_DEFS = {
-  acil: {title:"ACİL pozisyonlar",
-         filter:p=>String(p[C.URGENCY]).trim()==="ACİL"},
-  nobackup: {title:"Tanımlı yedeği olmayan pozisyonlar (Yedek_Var = Hayır)",
+  acil:     {title:"Acil pozisyonlar",
+             filter:p=>String(p[C.URGENCY]).trim()==="ACİL"},
+  readygap: {title:"ACİL + YÜKSEK riskli pozisyonlarda Göreve Hazır Yedek Açığı",
+             filter:p=>C.HIGH_RISK.includes(String(p[C.URGENCY]).trim()) && !positionHasReady(p)},
+  nobackup: {title:"Tanımlı yedeği olmayan pozisyonlar",
              filter:p=>!hasBackup(p)},
+  single:   {title:"Tek yedek bağımlılığı taşıyan pozisyonlar",
+             filter:p=>SUCCESSION_RISK_FLAGS.single.test(p)},
   highrisk: {title:"Yüksek Risk — ACİL + YÜKSEK pozisyonlar",
              filter:p=>C.HIGH_RISK.includes(String(p[C.URGENCY]).trim())},
-  readygap: {title:"ACİL + YÜKSEK riskli pozisyonlarda Göreve Hazır Yedek Açığı (Göreve Hazır Yedek Yok)",
-             filter:p=>C.HIGH_RISK.includes(String(p[C.URGENCY]).trim()) && !positionHasReady(p)},
 };
 
 /* Mevcut durumdan deterministik "sonraki adım" etiketi (yeni mantık/metrik DEĞİL;
@@ -40,43 +51,7 @@ function _nextStep(p){
   return ["İzle / sürdür","success"];
 }
 
-function _renderExecDrill(id){
-  const def = _DRILL_DEFS[id];
-  const host = document.getElementById("exec_drill");
-  if(!def){ host.innerHTML = ""; return; }
-  const subset = sortByUrgencyThenRisk(DATA.positions.filter(def.filter));
-  const cols = [
-    {key:"İsim",label:"Mevcut Pozisyon Sahibi",fmt:v=>disp(v)},
-    {key:"Pozisyon",label:"Pozisyon",fmt:v=>disp(v)},
-    {key:"Firma",label:"Firma",fmt:v=>disp(v)},
-    {key:"Şehir",label:"Şehir",fmt:v=>disp(v)},
-    {key:"Toplam_Risk",label:"Toplam Risk",fmt:v=>disp(v)},
-    {key:"Aciliyet_Final",label:"Aciliyet",rawFmt:v=>badge(disp(v))},
-    {key:"Yedek_Var",label:"Yedek",rawFmt:(v,r)=>badge(hasBackup(r)?"Var":"Yok", hasBackup(r)?"success":"danger")},
-    {key:"_ready",label:"Göreve Hazır Yedek",rawFmt:(v,r)=>positionHasReady(r)
-        ? badge("Var","success") : badge("Yok","neutral")},
-    {key:"_act",label:"",rawFmt:(v,r)=>`<button class="btn secondary small" data-pos="${DATA.positions.indexOf(r)}">Detayda aç →</button>`},
-  ];
-  host.innerHTML = `<div class="panel exec-drillpanel">
-    <h3 style="margin-top:0">Drill-down: ${esc(def.title)} <span class="muted">(${subset.length})</span></h3>
-    ${subset.length ? buildTable(cols, subset, {mobileCard:true}) : emptyState("Bu filtreyle eşleşen pozisyon yok.")}
-  </div>`;
-  host.querySelectorAll("[data-pos]").forEach(btn =>
-    btn.onclick = () => openInDetail(Number(btn.getAttribute("data-pos"))));
-  host.scrollIntoView({behavior:"smooth", block:"start"});
-}
-
-/* Tier 1 — kritik sinyal kartı (tıklanabilir; drill tetikler). Sayı mevcut hesaptan gelir. */
-function _signal(id, tone, count, title, subtitle){
-  return `<button class="signal-card t-${tone}" data-drill="${id}">
-    <div class="sig-num">${esc(count)}</div>
-    <div class="sig-label">${esc(title)}</div>
-    <div class="sig-desc">${esc(subtitle)}</div>
-    <div class="sig-action">${esc(count)} pozisyonu görüntüle <span class="sig-go">→</span></div>
-  </button>`;
-}
-
-/* Tier 2 — Kapsam vs Hazır-Halef karşılaştırma bileşeni (en güçlü ayrım). */
+/* Tanımlı Yedek Kapsamı vs Göreve Hazır Kapsamı (mevcut metrikler; değişmedi). */
 function _coverageCompare(s, rn){
   const cov = (100*s.coverage_ratio), ready = (100*rn.coverageRatio);
   const gap = s.coverage_present - rn.coverage;
@@ -100,233 +75,409 @@ function _coverageCompare(s, rn){
   </div>`;
 }
 
+/* === Çalışma alanı durumu (yalnızca UI state; hiçbir veriyi değiştirmez) === */
+const WS_ALL = "__all__";
+const _wsState = {
+  signal: null,        // aktif kritik sinyal (KPI) — null ise "açık riskli" varsayılan kapsam
+  firma: WS_ALL, seviye: WS_ALL, risk: WS_ALL, yedek: WS_ALL,
+  q: "",               // pozisyon arama
+  selected: null,      // seçili pozisyonun DATA.positions indeksi
+  expanded: false,     // liste tümünü göster
+};
+const WS_PAGE = 15;    // varsayılan gösterim: ilk 15 pozisyon
+
+/* Yedek durumu kovaları — mevcut yüklemler (successionEquityByLevel ile aynı mantık). */
+const WS_BACKUP_STATES = [
+  {v:"ready",  label:"Göreve Hazır Yedek var", test:p => positionHasReady(p)},
+  {v:"prep",   label:"Yedek var, hazır değil", test:p => !positionHasReady(p) && lookupBackups(p["İsim"]).length > 0},
+  {v:"none",   label:"Tanımlı yedek yok",      test:p => lookupBackups(p["İsim"]).length === 0},
+];
+
+/* Aktif filtrelere göre pozisyon kümesi. Sıralama MEVCUT kuyruk düzenidir
+   (aciliyet sırası → Toplam Risk azalan); yeni öncelik kuralı üretilmez. */
+function _wsItems(){
+  const sig = _wsState.signal ? _DRILL_DEFS[_wsState.signal] : null;
+  const q = normalizeValue(_wsState.q);
+  let items = DATA.positions.map((p, idx) => ({p, idx, flags: positionRiskFlags(p)}));
+  // Sinyal seçili değilse varsayılan kapsam: en az bir açık yedekleme riski taşıyanlar.
+  items = sig ? items.filter(o => sig.filter(o.p)) : items.filter(o => o.flags.length);
+  if(_wsState.firma !== WS_ALL)  items = items.filter(o => String(o.p["Firma"]).trim() === _wsState.firma);
+  if(_wsState.seviye !== WS_ALL) items = items.filter(o => String(o.p["Seviye"]).trim() === _wsState.seviye);
+  if(_wsState.risk !== WS_ALL)   items = items.filter(o => String(o.p[C.URGENCY]).trim() === _wsState.risk);
+  if(_wsState.yedek !== WS_ALL){
+    const st = WS_BACKUP_STATES.find(x => x.v === _wsState.yedek);
+    if(st) items = items.filter(o => st.test(o.p));
+  }
+  if(q) items = items.filter(o =>
+    normalizeValue(o.p["Pozisyon"]).includes(q) || normalizeValue(o.p["İsim"]).includes(q) ||
+    normalizeValue(o.p["Firma"]).includes(q));
+  return items.sort((a,b)=>{
+    const ra=urgencyRank(a.p[C.URGENCY]), rb=urgencyRank(b.p[C.URGENCY]);
+    if(ra!==rb) return ra-rb;
+    const xa=num(a.p[C.RISK_TOTAL]), xb=num(b.p[C.RISK_TOTAL]);
+    return (Number.isNaN(xb)?-Infinity:xb)-(Number.isNaN(xa)?-Infinity:xa);
+  });
+}
+
+/* Kompakt kontrol (tek seçim + "Tümü"). */
+function _wsSelect(id, label, options, value){
+  const opts = [`<option value="${WS_ALL}"${value===WS_ALL?" selected":""}>Tümü</option>`]
+    .concat(options.map(o => {
+      const v = typeof o === "string" ? o : o.v, t = typeof o === "string" ? o : o.label;
+      return `<option value="${esc(v)}"${value===v?" selected":""}>${esc(t)}</option>`;
+    })).join("");
+  return `<div class="ws-field"><label for="${id}">${esc(label)}</label>
+    <select id="${id}" class="ws-select">${opts}</select></div>`;
+}
+
+/* Yedek hazırlığı göstergesi — mevcut benchStrength (yalnızca Hazır / diğer aday).
+   Kaynakta zaman-bazlı hazırlık kademesi (1-2 yıl / 3+ yıl) YOKTUR; üretilmez. */
+function _wsReadiness(p){
+  const b = benchStrength(p["İsim"]);
+  if(!b.total) return `<span class="ws-rd-none" title="Tanımlı yedek yok">—</span>`;
+  return `<span class="ws-rd" title="${b.ready} Göreve Hazır · ${b.other} hazırlanan / diğer aday">
+      <span class="ws-rd-i ready"><i></i>${b.ready}</span>
+      <span class="ws-rd-i other"><i></i>${b.other}</span>
+    </span>`;
+}
+
 function renderExec(el){
   const poz = DATA.positions;
   const s = calculateSummary(poz);
   const rn = readyNowStats();
 
-  // Kritik karar listesi: ACİL+YÜKSEK öncelikli (ilk 12), zengin sütunlar.
-  const critical = acilYuksekTop(poz, 12);
-  const critCols = [
-    {key:"_pos",label:"Pozisyon",cls:"wrap-cell",rawFmt:(v,r)=>
-      `<div class="cl-pos"><b>${esc(disp(r["Pozisyon"]))}</b><span>${esc(disp(r["İsim"]))} · ${esc(disp(r["Firma"]))} · ${esc(disp(r["Şehir"]))}</span></div>`},
-    {key:"_why",label:"Neden riskli?",rawFmt:(v,r)=>
-      `${badge(disp(r["Aciliyet_Final"]))}<div class="cl-sub">Risk ${esc(disp(r["Toplam_Risk"]))}</div>`},
-    {key:"_succ",label:"Yedek durumu",rawFmt:(v,r)=>{
-      const ready = positionHasReady(r); const n = lookupBackups(r["İsim"]).length;
-      return `${badge(ready?"Göreve Hazır Yedek Var":"Göreve Hazır Yedek Yok", ready?"success":(hasBackup(r)?"warning":"danger"))}<div class="cl-sub">${n} tanımlı yedek</div>`;}},
-    {key:"_next",label:"Sonraki adım",rawFmt:(v,r)=>{const ns=_nextStep(r); return badge(ns[0],ns[1]);}},
-    {key:"_act",label:"",rawFmt:(v,r)=>`<button class="btn secondary small" data-pos="${DATA.positions.indexOf(r)}">Detayda aç →</button>`},
-  ];
-
   const urgDist = {};
   C.URGENCY_ORDER.forEach(u => urgDist[u] = s.urgency_counts[u]||0);
   Object.keys(s.urgency_counts).forEach(k => { if(!(k in urgDist)) urgDist[k]=s.urgency_counts[k]; });
 
-  // V1.2-A — Açık Halefiyet Riskleri (Karar Kuyruğu): mevcut yüklemlerden türeyen,
-  // en az bir açık risk bayrağı taşıyan pozisyonlar. Yeni skor/sıralama yok.
-  const _rqAll = openSuccessionRiskList();                 // [{p, idx, flags}]
-  const _rqFirmaOpts = [...new Set(_rqAll.map(o => o.p["Firma"]).filter(v=>!isBlank(v))
-    .map(v=>String(v).trim()))].sort((a,b)=>a.localeCompare(b,"tr"));
-  const _RQ_SEV_ORDER = ["Başkan / GM", "Direktör / GMY", "Müdür"];
-  const _rqSeviyeOpts = _RQ_SEV_ORDER.filter(s2 => _rqAll.some(o => String(o.p["Seviye"]).trim()===s2))
-    .concat([...new Set(_rqAll.map(o=>String(o.p["Seviye"]).trim()))]
-      .filter(s2 => s2 && !_RQ_SEV_ORDER.includes(s2)).sort((a,b)=>a.localeCompare(b,"tr")));
-  const _rqTypeOpts = SUCCESSION_RISK_ORDER.map(k => SUCCESSION_RISK_FLAGS[k].label);
-  const _rqLabelToKey = {};
-  SUCCESSION_RISK_ORDER.forEach(k => _rqLabelToKey[SUCCESSION_RISK_FLAGS[k].label] = k);
+  /* Kritik sinyaller — sayılar mevcut hesaplardan; her kart aynı yüklemle listeyi filtreler. */
+  const signals = [
+    {id:"acil",     tone:"critical", count:s.acil,               title:"Acil Pozisyon",
+     desc:"Yedek veya aksiyon planı gerektirir"},
+    {id:"readygap", tone:"critical", count:rn.gap,               title:"Göreve Hazır Yedek Açığı",
+     desc:"ACİL+YÜKSEK riskli, hazır yedek yok"},
+    {id:"nobackup", tone:"warning",  count:s.coverage_absent,    title:"Tanımlı Yedeği Yok",
+     desc:"Yedek adayı tanımlanmamış"},
+    {id:"single",   tone:"amber",    count:poz.filter(SUCCESSION_RISK_FLAGS.single.test).length,
+     title:"Tek Yedek Bağımlılığı", desc:"Tek kişiye bağımlı yedekleme"},
+    {id:"highrisk", tone:"neutral",  count:s.high_risk_count,    title:"Yüksek Risk",
+     desc:"ACİL + YÜKSEK toplamı"},
+  ];
 
-  // V1.3-A — Öncelikli Pozisyonlar: mevcut risk kuyruğunun sırasıyla (urgencyRank→risk) ilk 15.
-  // Yeni sıralama/skor/kural üretmez; aynı sıralı liste 3 kolona (1-5/6-10/11-15) bölünür —
-  // dilimleme render katmanındadır, veri kaynağı/sıra değişmez.
-  const _prio = [..._rqAll].sort((a,b)=>{
-    const ra=urgencyRank(a.p[C.URGENCY]), rb=urgencyRank(b.p[C.URGENCY]);
-    if(ra!==rb) return ra-rb;
-    const xa=num(a.p[C.RISK_TOTAL]), xb=num(b.p[C.RISK_TOTAL]);
-    return (Number.isNaN(xb)?-Infinity:xb)-(Number.isNaN(xa)?-Infinity:xa);
-  }).slice(0,15);
-  const _prioRow = o => {
-    const flags = o.flags.map(f=>badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)).join(" ");
-    return `<button class="exec-prio-row" data-pos="${o.idx}"
-        aria-label="${esc(disp(o.p["Pozisyon"]))} — Pozisyon Karar Dosyası'nı aç">
-      <span class="epr-info">
-        <span class="epr-name">${esc(disp(o.p["Pozisyon"]))}</span>
-        <span class="epr-meta">${esc(disp(o.p["Firma"]))} · ${esc(disp(o.p["Seviye"]))}</span>
-        <span class="epr-flags">${flags}</span>
-      </span>
-      <span class="epr-photo" aria-hidden="true"></span>
-      <span class="epr-go" aria-hidden="true">›</span>
-    </button>`;
-  };
-  // Sabit 3 blok: 1-5 sol, 6-10 orta, 11-15 sağ (15'ten az kayıt varsa eldeki kadarı; boş
-  // kolon render edilmez).
-  const _prioCols = [_prio.slice(0,5), _prio.slice(5,10), _prio.slice(10,15)]
-    .filter(col => col.length)
-    .map(col => `<div class="exec-prio-col">${col.map(_prioRow).join("")}</div>`)
-    .join("");
+  // Filtre seçenekleri — mevcut veri değerlerinden.
+  const firmaOpts = [...new Set(poz.map(p=>String(p["Firma"]).trim()).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,"tr"));
+  const SEV_ORDER = ["Başkan / GM","Direktör / GMY","Müdür"];
+  const sevPresent = [...new Set(poz.map(p=>String(p["Seviye"]).trim()).filter(Boolean))];
+  const seviyeOpts = SEV_ORDER.filter(x=>sevPresent.includes(x))
+    .concat(sevPresent.filter(x=>!SEV_ORDER.includes(x)).sort((a,b)=>a.localeCompare(b,"tr")));
+  const riskOpts = C.URGENCY_ORDER.filter(u => (s.urgency_counts[u]||0) > 0);
 
   el.innerHTML = `
-    <header class="exec-head">
-      <div class="exec-head-main">
-        <div class="exec-eyebrow">YÖNETİCİ KARAR ÖZETİ</div>
-        <h2 class="exec-title">Kritik Yedekleme Durumu</h2>
-        <p class="exec-lede">Kritik pozisyonlar, Göreve Hazır Kapsamı ve açık yedekleme riskleri.</p>
-      </div>
-      <div class="exec-meta">
-        <span class="meta-chip">${s.critical_count} pozisyon</span>
-        ${isBlank(DATA.meta.generated_at) ? "" : `<span class="meta-chip">Veri tarihi: ${esc(DATA.meta.generated_at)}</span>`}
-      </div>
-    </header>
-
-    <!-- TIER 1 — Kritik Sinyaller -->
-    <section class="exec-section">
-      <div class="section-head"><h3>Kritik Sinyaller</h3>
-        <span class="section-hint">Karta tıklayın → filtreli pozisyon listesi</span></div>
-      <div class="signal-grid">
-        ${_signal("acil","danger", s.acil, "Acil Pozisyon", "Yedek veya aksiyon planı gerektirir")}
-        ${_signal("readygap","danger", rn.gap, "Göreve Hazır Yedek Açığı", "ACİL+YÜKSEK riskli pozisyonlarda Göreve Hazır Yedek Yok")}
-        ${_signal("nobackup","warning", s.coverage_absent, "Tanımlı Yedeği Yok", "Yedek adayı tanımlanmamış pozisyonlar")}
-      </div>
-      <div class="caption sig-note">Sinyaller aynı pozisyonda kesişebilir; kartlardaki sayılar toplanmaz.</div>
-      <div id="exec_drill"></div>
-    </section>
-
-    <!-- Öncelikli Pozisyonlar (mevcut risk kuyruğu sırası; ilk 5) -->
-    <section class="exec-section">
-      <div class="section-head"><h3>Öncelikli Pozisyonlar</h3>
-        <span class="section-hint">Açık yedekleme riski taşıyan ilk ${_prio.length} pozisyon</span></div>
-      ${_prio.length
-        ? `<div class="exec-prio-grid">${_prioCols}</div>
-           <button class="exec-prio-all" data-prio-all="1">Tüm açık yedekleme risklerini görüntüle →</button>`
-        : emptyState("Açık yedekleme riski bulunmuyor.")}
-    </section>
-
-    <!-- TIER 2 — Succession Sağlığı -->
-    <section class="exec-section">
-      <div class="section-head"><h3>Kapsam ve Hazırlık</h3></div>
-      <div class="panel cov-panel">
-        ${_coverageCompare(s, rn)}
-        <div class="cov-foot">
-          <button class="stat-link" data-drill="highrisk">Yüksek Risk (ACİL+YÜKSEK):
-            <b>${s.high_risk_count}</b> · toplamın %${trPct(100*s.high_risk_ratio)}'si <span>›</span></button>
-          <span class="muted">Göreve Hazır yedek <b>kaydı</b>: ${rn.readyRecords} (pozisyon değil, kayıt ölçüsü)</span>
+    <div class="ws">
+      <header class="ws-head">
+        <div class="ws-head-main">
+          <div class="ws-eyebrow">YÖNETİCİ KARAR ALANI</div>
+          <h2 class="ws-title">Kritik Yedekleme Durumu</h2>
+          <p class="ws-lede">Kritik pozisyonları, yedekleme risklerini ve aksiyonları yönetin.</p>
         </div>
-      </div>
-    </section>
-
-    <!-- TIER 3 — Kritik Pozisyon Listesi (aksiyon) -->
-    <section class="exec-section">
-      <div class="section-head"><h3>3 · Kritik pozisyonlar — sonraki adım</h3>
-        <span class="section-hint">ACİL + YÜKSEK öncelikli · ilk ${critical.length} / ${s.high_risk_count}</span></div>
-      <div id="exec_critical_table">
-        ${critical.length ? buildTable(critCols, critical)
-          : emptyState("ACİL veya YÜKSEK riskli pozisyon yok.")}
-      </div>
-      ${s.high_risk_count>critical.length
-        ? `<div class="caption">Tümü için yukarıdaki <b>Yüksek Risk</b> kartından inebilirsiniz.</div>`:""}
-    </section>
-
-    <!-- TIER 4 — Açık Halefiyet Riskleri (Karar Kuyruğu) -->
-    <section class="exec-section">
-      <div class="section-head"><h3>4 · Açık yedekleme riskleri — karar kuyruğu</h3>
-        <span class="section-hint">Açık riskli pozisyonları filtreleyin → pozisyon detayına inin</span></div>
-      ${note("info", `Mevcut karar kurallarından türeyen açık riskleri taşıyan pozisyonların tek,
-        salt-okunur ve filtrelenebilir kuyruğu. Bayraklar mevcut yüklemlerle aynıdır
-        (Kritik Göreve Hazır Yedek Açığı · Tanımlı yedek yok · Tek yedek bağımlılığı); yeni
-        skor/öneri/sıralama üretilmez. Nihai değerlendirme yönetici ve İK kalibrasyonunda yapılır.`)}
-      <div class="rq-controls" id="rq_controls">
-        ${multiselectField("rq_type","Risk türü", _rqTypeOpts)}
-        ${multiselectField("rq_firma","Firma", _rqFirmaOpts)}
-        ${multiselectField("rq_seviye","Seviye", _rqSeviyeOpts)}
-        <div class="field"><label>&nbsp;</label>
-          <button class="btn secondary small" id="rq_reset">Filtreleri temizle</button></div>
-      </div>
-      <div id="rq_counts"></div>
-      <div id="rq_table"></div>
-    </section>
-
-    <!-- Bağlam (sakin, ikincil) -->
-    <section class="exec-section exec-context">
-      <div class="section-head"><h3 class="muted-head">Bağlam</h3></div>
-      <div class="distros">
-        <div class="panel"><h4>Aciliyet Dağılımı</h4>${renderBars(urgDist)}</div>
-        <div class="panel"><h4>Seviye Bazında Kapsam</h4>
-          ${buildTable(
-            [{key:"Seviye",label:"Seviye"},{key:"Pozisyon",label:"Pozisyon"},
-             {key:"Yedeği Var",label:"Yedeği Var"},{key:"Kapsam %",label:"Kapsam %"},
-             {key:"Ort. Risk",label:"Ort. Risk"}], _levelCoverage(poz))}
+        <div class="ws-head-meta">
+          <span class="ws-pill">${s.critical_count} pozisyon</span>
+          ${isBlank(DATA.meta.generated_at) ? ""
+            : `<span class="ws-pill">Veri tarihi: ${esc(DATA.meta.generated_at)}</span>`}
         </div>
+      </header>
+
+      <div class="ws-controls" id="ws_controls">
+        ${_wsSelect("ws_firma","Şirket", firmaOpts, _wsState.firma)}
+        ${_wsSelect("ws_seviye","Seviye", seviyeOpts, _wsState.seviye)}
+        ${_wsSelect("ws_risk","Risk", riskOpts, _wsState.risk)}
+        ${_wsSelect("ws_yedek","Yedek Durumu", WS_BACKUP_STATES.map(x=>({v:x.v,label:x.label})), _wsState.yedek)}
       </div>
-      <div class="caption">Risk dağılımı — ortalama ${s.risk_mean.toFixed(1).replace(".",",")} ·
-        medyan ${s.risk_median.toFixed(1).replace(".",",")} ·
-        maks ${s.risk_max.toFixed(1).replace(".",",")}.
-        Veri salt-okunur; risk ve Göreve Hazır değerleri yeniden hesaplanmaz.</div>
-    </section>
+
+      <section class="ws-signals" aria-label="Kritik sinyaller">
+        ${signals.map(g => `
+          <button class="ws-kpi t-${g.tone}" data-signal="${g.id}"
+              aria-pressed="${_wsState.signal===g.id ? "true" : "false"}"
+              title="${esc(_DRILL_DEFS[g.id].title)}">
+            <span class="ws-kpi-num">${esc(g.count)}</span>
+            <span class="ws-kpi-title">${esc(g.title)}</span>
+            <span class="ws-kpi-desc">${esc(g.desc)}</span>
+          </button>`).join("")}
+      </section>
+      <div class="caption ws-signal-note">Sinyaller aynı pozisyonda kesişebilir; kartlardaki
+        sayılar toplanmaz. Sinyal seçili değilken liste, açık yedekleme riski taşıyan
+        pozisyonları gösterir.</div>
+
+      <div class="ws-grid">
+        <section class="panel ws-list-panel" aria-label="Öncelikli pozisyonlar">
+          <div class="ws-panel-head">
+            <h3 class="ws-panel-title">Öncelikli Pozisyonlar</h3>
+            <span class="ws-panel-hint" id="ws_scope_hint"></span>
+          </div>
+          <div class="ws-toolbar">
+            <label class="ws-search">
+              <span class="sr-only">Pozisyon ara</span>
+              <input type="search" id="ws_q" placeholder="Pozisyon, kişi veya şirket ara…"
+                value="${esc(_wsState.q)}" autocomplete="off">
+            </label>
+            <span class="ws-rd-legend" aria-hidden="true">
+              <span class="ws-rd-i ready"><i></i>Göreve Hazır</span>
+              <span class="ws-rd-i other"><i></i>Diğer aday</span>
+            </span>
+          </div>
+          <div id="ws_chips" class="ws-chips"></div>
+          <div id="ws_list"></div>
+        </section>
+
+        <aside class="panel ws-detail-panel" id="ws_detail" aria-live="polite"
+               aria-label="Seçili pozisyon detayı"></aside>
+      </div>
+
+      <section class="exec-section">
+        <div class="section-head"><h3>Kapsam ve Hazırlık</h3></div>
+        <div class="panel cov-panel">
+          ${_coverageCompare(s, rn)}
+          <div class="cov-foot">
+            <span class="muted">Göreve Hazır yedek <b>kaydı</b>: ${rn.readyRecords}
+              (pozisyon değil, kayıt ölçüsü)</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="exec-section exec-context">
+        <div class="section-head"><h3 class="muted-head">Bağlam</h3></div>
+        <div class="distros">
+          <div class="panel"><h4>Aciliyet Dağılımı</h4>${renderBars(urgDist)}</div>
+          <div class="panel"><h4>Seviye Bazında Kapsam</h4>
+            ${buildTable(
+              [{key:"Seviye",label:"Seviye"},{key:"Pozisyon",label:"Pozisyon"},
+               {key:"Yedeği Var",label:"Yedeği Var"},{key:"Kapsam %",label:"Kapsam %"},
+               {key:"Ort. Risk",label:"Ort. Risk"}], _levelCoverage(poz), {mobileCard:true})}
+          </div>
+        </div>
+        <div class="caption">Risk dağılımı — ortalama ${s.risk_mean.toFixed(1).replace(".",",")} ·
+          medyan ${s.risk_median.toFixed(1).replace(".",",")} ·
+          maks ${s.risk_max.toFixed(1).replace(".",",")}.
+          Veri salt-okunur; risk ve Göreve Hazır değerleri yeniden hesaplanmaz.</div>
+      </section>
+    </div>
   `;
 
-  // KPI/sinyal drill-down olayları (data-drill: signal-card, stat-link)
-  el.querySelectorAll("[data-drill]").forEach(card => {
-    const go = () => _renderExecDrill(card.getAttribute("data-drill"));
-    card.onclick = go;
-    card.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } };
-  });
-  // Kritik liste + Öncelikli Pozisyonlar satırları "Detayda aç" deep-link (data-pos → openInDetail)
-  el.querySelectorAll(".exec-section [data-pos]").forEach(btn =>
-    btn.onclick = () => openInDetail(Number(btn.getAttribute("data-pos"))));
-  // "Tüm açık halefiyet risklerini görüntüle" → mevcut Risk Kuyruğu bölümüne güvenli scroll.
-  const _prioAll = el.querySelector("[data-prio-all]");
-  if(_prioAll) _prioAll.onclick = () => {
-    const t = document.getElementById("rq_controls");
-    if(t) t.scrollIntoView({behavior:"smooth", block:"start"});
-  };
+  const listEl   = el.querySelector("#ws_list");
+  const chipsEl  = el.querySelector("#ws_chips");
+  const detailEl = el.querySelector("#ws_detail");
+  const hintEl   = el.querySelector("#ws_scope_hint");
 
-  // --- TIER 4: Açık Halefiyet Riskleri (Karar Kuyruğu) güncelleme + bağlama ---
-  const _rqCountsEl = document.getElementById("rq_counts");
-  const _rqTableEl = document.getElementById("rq_table");
-  const _rqCols = [
-    {key:"_pos",label:"Pozisyon",cls:"wrap-cell",rawFmt:(v,r)=>
-      `<div class="cl-pos"><b>${esc(disp(r.p["Pozisyon"]))}</b><span>${esc(disp(r.p["İsim"]))} · ${esc(disp(r.p["Firma"]))} · ${esc(disp(r.p["Şehir"]))}</span></div>`},
-    {key:"_why",label:"Neden riskli?",rawFmt:(v,r)=>
-      `${badge(disp(r.p["Aciliyet_Final"]))}<div class="cl-sub">Risk ${esc(disp(r.p["Toplam_Risk"]))}</div>`},
-    {key:"_flags",label:"Açık riskler",cls:"wrap-cell",rawFmt:(v,r)=>
-      r.flags.map(f=>badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)).join(" ")},
-    {key:"_bk",label:"Tanımlı yedek",rawFmt:(v,r)=>String(lookupBackups(r.p["İsim"]).length)},
-    {key:"_act",label:"",rawFmt:(v,r)=>`<button class="btn secondary small" data-pos="${r.idx}">Detayda aç →</button>`},
-  ];
-  function _rqUpdate(){
-    const selTypes = getMultiselect("rq_type").map(l => _rqLabelToKey[l]).filter(Boolean);
-    const selF = getMultiselect("rq_firma");
-    const selS = getMultiselect("rq_seviye");
-    const items = _rqAll.filter(o =>
-      (!selF.length || selF.includes(String(o.p["Firma"]).trim())) &&
-      (!selS.length || selS.includes(String(o.p["Seviye"]).trim())) &&
-      (!selTypes.length || o.flags.some(f => selTypes.includes(f))));
-    items.sort((a,b)=>{
-      const ra=urgencyRank(a.p[C.URGENCY]), rb=urgencyRank(b.p[C.URGENCY]);
-      if(ra!==rb) return ra-rb;
-      const xa=num(a.p[C.RISK_TOTAL]), xb=num(b.p[C.RISK_TOTAL]);
-      return (Number.isNaN(xb)?-Infinity:xb)-(Number.isNaN(xa)?-Infinity:xa);
-    });
-    // Canlı sayım şeridi (filtrelenen kuyruktaki bayrak kırılımı; bir pozisyon >1 bayrak taşıyabilir)
-    const fc = {};
-    SUCCESSION_RISK_ORDER.forEach(k => fc[k] = items.filter(o=>o.flags.includes(k)).length);
-    _rqCountsEl.innerHTML = `<div class="metric-grid rq-counts">
-      ${metricCard("Kuyruktaki pozisyon", items.length, "en az bir açık risk")}
-      ${SUCCESSION_RISK_ORDER.map(k =>
-        metricCard(SUCCESSION_RISK_FLAGS[k].label, fc[k], "")).join("")}
-    </div>`;
-    _rqTableEl.innerHTML = items.length ? buildTable(_rqCols, items)
-      : emptyState("Seçili filtrelerle açık risk taşıyan pozisyon yok.");
-    _rqTableEl.querySelectorAll("[data-pos]").forEach(btn =>
-      btn.onclick = () => openInDetail(Number(btn.getAttribute("data-pos"))));
+  /* --- Seçili pozisyon detay paneli (yalnızca mevcut veri) --- */
+  function renderDetail(){
+    const idx = _wsState.selected;
+    const p = (idx != null) ? DATA.positions[idx] : null;
+    if(!p){
+      detailEl.innerHTML = `<div class="ws-detail-empty">
+        ${emptyState("Detayını görmek için listeden bir pozisyon seçin.")}</div>`;
+      return;
+    }
+    const flags = positionRiskFlags(p);
+    const bench = benchStrength(p["İsim"]);
+    const backups = lookupBackups(p["İsim"]);
+    const ns = _nextStep(p);
+
+    const riskRows = flags.length
+      ? flags.map(f => `<div class="ws-risk-row">
+            ${badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)}
+            <span class="ws-risk-desc">${esc(SUCCESSION_RISK_FLAGS[f].desc)}</span>
+          </div>`).join("")
+      : `<div class="ws-empty-inline">Bu pozisyon için açık yedekleme riski bulunmuyor.</div>`;
+
+    const candList = backups.length
+      ? `<ul class="ws-cand-list">${backups.map(b => {
+            const ready = isReadyBackup(b);
+            return `<li class="ws-cand">
+              <span class="ws-cand-main">
+                <span class="ws-cand-name">${esc(disp(b["Yedek_İsim"]))}</span>
+                <span class="ws-cand-meta">${esc(isBlank(b["Yedek_Görev"]) ? "Görev: Kaynakta belirtilmedi" : b["Yedek_Görev"])}</span>
+              </span>
+              ${badge(ready ? "Göreve Hazır" : "Hazırlanıyor / değil", ready ? "success" : "warning")}
+            </li>`;
+          }).join("")}</ul>`
+      : `<div class="ws-empty-inline">Tanımlı yedek bulunmuyor.</div>`;
+
+    detailEl.innerHTML = `
+      <div class="ws-dt-head">
+        <div class="ws-dt-titles">
+          <div class="ws-dt-title">${esc(disp(p["Pozisyon"]))}</div>
+          <div class="ws-dt-sub">${esc(disp(p["Firma"]))} · ${esc(disp(p["Seviye"]))}
+            · ${esc(disp(p["Şehir"]))}</div>
+          <div class="ws-dt-sub muted">Mevcut sahip: ${esc(disp(p["İsim"]))}</div>
+        </div>
+        ${badge(disp(p[C.URGENCY]))}
+      </div>
+      <button class="btn ws-dt-cta" data-open-detail="${idx}">Karar dosyasına git →</button>
+
+      <div class="ws-dt-block">
+        <h4>Risk Özeti</h4>
+        <div class="ws-dt-kv">
+          <div><span>Toplam Risk</span><b>${esc(disp(p[C.RISK_TOTAL]))}</b></div>
+          <div><span>Sonraki adım</span>${badge(ns[0], ns[1])}</div>
+        </div>
+        ${riskRows}
+      </div>
+
+      <div class="ws-dt-block">
+        <h4>Yedek Havuzu</h4>
+        <div class="ws-pipe">
+          <div class="ws-pipe-i ready"><b>${bench.ready}</b><span>Göreve Hazır</span></div>
+          <div class="ws-pipe-i other"><b>${bench.other}</b><span>Diğer aday</span></div>
+          <div class="ws-pipe-i total"><b>${bench.total}</b><span>Toplam</span></div>
+        </div>
+        <div class="caption">Kaynakta zaman-bazlı hazırlık kademesi (1–2 yıl / 3+ yıl)
+          bulunmadığından üretilmez.</div>
+      </div>
+
+      <div class="ws-dt-block">
+        <h4>Yedek Adayları</h4>
+        ${candList}
+      </div>
+
+      <div class="ws-dt-block">
+        <h4>Açık Aksiyonlar</h4>
+        <div class="ws-empty-inline">Bağlı aksiyon kaydı bulunmuyor.</div>
+        <div class="caption">Kaynakta aksiyon sahibi / termin / durum alanı ve doğrulanmış
+          aday↔aksiyon anahtarı yoktur.</div>
+      </div>
+
+      <div class="ws-dt-block">
+        <h4>Son Kalibrasyon</h4>
+        <div class="ws-empty-inline">Kalibrasyon tarihi yok.</div>
+      </div>
+    `;
+    const cta = detailEl.querySelector("[data-open-detail]");
+    if(cta) cta.onclick = () => openInDetail(Number(cta.getAttribute("data-open-detail")));
   }
-  document.querySelectorAll("#rq_controls select").forEach(sel => sel.onchange = _rqUpdate);
-  const _rqReset = document.getElementById("rq_reset");
-  if(_rqReset) _rqReset.onclick = () => {
-    ["rq_type","rq_firma","rq_seviye"].forEach(id => {
-      const s2 = document.getElementById(id); if(s2)[...s2.options].forEach(o=>o.selected=false);
+
+  /* --- Aktif filtre chip'leri --- */
+  function renderChips(){
+    const chips = [];
+    if(_wsState.signal) chips.push({k:"signal", t:"Sinyal: " + _DRILL_DEFS[_wsState.signal].title});
+    if(_wsState.firma !== WS_ALL)  chips.push({k:"firma",  t:"Şirket: " + _wsState.firma});
+    if(_wsState.seviye !== WS_ALL) chips.push({k:"seviye", t:"Seviye: " + _wsState.seviye});
+    if(_wsState.risk !== WS_ALL)   chips.push({k:"risk",   t:"Risk: " + _wsState.risk});
+    if(_wsState.yedek !== WS_ALL){
+      const st = WS_BACKUP_STATES.find(x=>x.v===_wsState.yedek);
+      if(st) chips.push({k:"yedek", t:"Yedek: " + st.label});
+    }
+    if(_wsState.q) chips.push({k:"q", t:"Arama: " + _wsState.q});
+    chipsEl.innerHTML = chips.length
+      ? `<span class="ws-chips-lbl">Aktif filtreler:</span>` + chips.map(c =>
+          `<button class="ws-chip" data-chip="${c.k}">${esc(c.t)}
+             <span aria-hidden="true">✕</span><span class="sr-only">filtreyi kaldır</span></button>`).join("")
+        + `<button class="ws-chip-clear" data-chip="all">Filtreleri temizle</button>`
+      : "";
+    chipsEl.querySelectorAll("[data-chip]").forEach(b => b.onclick = () => {
+      const k = b.getAttribute("data-chip");
+      if(k === "all"){
+        _wsState.signal = null; _wsState.firma = _wsState.seviye = WS_ALL;
+        _wsState.risk = _wsState.yedek = WS_ALL; _wsState.q = "";
+      } else if(k === "signal"){ _wsState.signal = null; }
+      else if(k === "q"){ _wsState.q = ""; }
+      else { _wsState[k] = WS_ALL; }
+      syncControls();
+      update();
     });
-    _rqUpdate();
-  };
-  _rqUpdate();
+  }
+
+  function syncControls(){
+    const set = (id, v) => { const s2 = el.querySelector("#"+id); if(s2) s2.value = v; };
+    set("ws_firma", _wsState.firma); set("ws_seviye", _wsState.seviye);
+    set("ws_risk", _wsState.risk);   set("ws_yedek", _wsState.yedek);
+    const q = el.querySelector("#ws_q"); if(q && q.value !== _wsState.q) q.value = _wsState.q;
+    el.querySelectorAll("[data-signal]").forEach(b =>
+      b.setAttribute("aria-pressed", _wsState.signal === b.getAttribute("data-signal") ? "true" : "false"));
+  }
+
+  /* --- Pozisyon listesi (master) --- */
+  function renderList(){
+    const items = _wsItems();
+    hintEl.textContent = _wsState.signal
+      ? `${items.length} pozisyon · ${_DRILL_DEFS[_wsState.signal].title}`
+      : `Açık yedekleme riski taşıyan ${items.length} pozisyon`;
+
+    if(!items.length){
+      _wsState.selected = null;
+      listEl.innerHTML = emptyState("Seçili filtrelerle eşleşen pozisyon yok. Filtreleri temizleyip yeniden deneyin.");
+      renderDetail();
+      return;
+    }
+    // Seçim geçerliliği: filtre sonrası seçili pozisyon listede yoksa ilk satıra düş.
+    if(_wsState.selected == null || !items.some(o => o.idx === _wsState.selected))
+      _wsState.selected = items[0].idx;
+
+    const shown = _wsState.expanded ? items : items.slice(0, WS_PAGE);
+    const rows = shown.map((o, i) => {
+      const flags = o.flags.length
+        ? o.flags.map(f=>badge(SUCCESSION_RISK_FLAGS[f].label, SUCCESSION_RISK_FLAGS[f].tone)).join(" ")
+        : `<span class="muted">—</span>`;
+      const sel = o.idx === _wsState.selected;
+      return `<tr class="ws-row${sel?" is-selected":""}" data-row="${o.idx}" tabindex="0"
+            role="button" aria-pressed="${sel?"true":"false"}"
+            aria-label="${esc(disp(o.p["Pozisyon"]))} — detayını göster">
+        <td class="ws-c-rank" data-label="Öncelik">${i+1}</td>
+        <td class="ws-c-pos" data-label="Pozisyon">
+          <span class="ws-pos-name">${esc(disp(o.p["Pozisyon"]))}</span>
+          <span class="ws-pos-sub">${esc(disp(o.p["İsim"]))}</span></td>
+        <td class="ws-c-org" data-label="Şirket / Seviye">
+          <span>${esc(disp(o.p["Firma"]))}</span>
+          <span class="ws-pos-sub">${esc(disp(o.p["Seviye"]))}</span></td>
+        <td class="ws-c-risk" data-label="Riskler">
+          ${badge(disp(o.p[C.URGENCY]))}<div class="ws-flags">${flags}</div></td>
+        <td class="ws-c-rd" data-label="Yedek hazırlığı">${_wsReadiness(o.p)}</td>
+      </tr>`;
+    }).join("");
+
+    listEl.innerHTML = `<div class="ws-table-wrap"><table class="ws-table">
+        <thead><tr>
+          <th scope="col">Öncelik</th><th scope="col">Pozisyon</th>
+          <th scope="col">Şirket / Seviye</th><th scope="col">Riskler</th>
+          <th scope="col" title="Göreve Hazır / diğer aday sayısı">Yedek hazırlığı</th>
+        </tr></thead><tbody>${rows}</tbody></table></div>
+      ${items.length > WS_PAGE
+        ? `<button class="ws-more" data-more="1">${_wsState.expanded
+            ? "İlk " + WS_PAGE + " pozisyonu göster"
+            : "Tümünü göster (" + items.length + ")"}</button>`
+        : ""}`;
+
+    const pick = idx => { _wsState.selected = idx; renderList(); renderDetail(); };
+    listEl.querySelectorAll(".ws-row").forEach(tr => {
+      tr.onclick = () => pick(Number(tr.getAttribute("data-row")));
+      tr.onkeydown = e => {
+        if(e.key === "Enter" || e.key === " "){ e.preventDefault(); pick(Number(tr.getAttribute("data-row"))); }
+      };
+    });
+    const more = listEl.querySelector("[data-more]");
+    if(more) more.onclick = () => { _wsState.expanded = !_wsState.expanded; renderList(); };
+  }
+
+  function update(){ renderChips(); renderList(); renderDetail(); }
+
+  // --- Olay bağlama (her render'da yeni DOM'a bir kez; onX ataması duplication üretmez) ---
+  el.querySelectorAll("[data-signal]").forEach(btn => {
+    const go = () => {
+      const id = btn.getAttribute("data-signal");
+      _wsState.signal = (_wsState.signal === id) ? null : id;   // aynı karta tekrar → kaldır
+      _wsState.expanded = false; _wsState.selected = null;
+      syncControls(); update();
+    };
+    btn.onclick = go;
+  });
+  [["ws_firma","firma"],["ws_seviye","seviye"],["ws_risk","risk"],["ws_yedek","yedek"]]
+    .forEach(([id,key]) => {
+      const sel = el.querySelector("#"+id);
+      if(sel) sel.onchange = () => { _wsState[key] = sel.value; _wsState.selected = null; update(); };
+    });
+  const qEl = el.querySelector("#ws_q");
+  if(qEl) qEl.oninput = () => { _wsState.q = qEl.value; _wsState.selected = null; update(); };
+
+  syncControls();
+  update();
 }
